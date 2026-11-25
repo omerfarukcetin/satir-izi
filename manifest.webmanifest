@@ -1,1 +1,24 @@
-{"id":"./","name":"Satır İzi – Kitap Notları","short_name":"Satır İzi","lang":"tr","start_url":"./","scope":"./","display":"standalone","background_color":"#f6f3ea","theme_color":"#f6f3ea","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]}
+{
+  "id": "./",
+  "name": "Satır İzi – Kitap Notları",
+  "short_name": "Satır İzi",
+  "description": "Altını çizdiğin satırları yapay zekâ ile dijital arşivine aktar. Okudukların kaybolmasın.",
+  "lang": "tr",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6f3ea",
+  "theme_color": "#355e48",
+  "categories": ["books", "education", "productivity"],
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/maskable-icon.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Sayfa tara", "short_name": "Tara", "url": "./#/tara", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Alıntılarım", "url": "./#/alintilar", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
