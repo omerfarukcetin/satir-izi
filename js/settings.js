@@ -48,7 +48,7 @@ export async function applyAppearance() {
   root.style.fontSize = `${Math.round(16 * font * 100) / 100}px`;
   root.removeAttribute('data-font');
   const dark = theme === 'dark' || (theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
-  document.querySelector('meta[name=theme-color]')?.setAttribute('content', dark ? '#171c19' : '#f6f3ea');
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', dark ? '#13294b' : '#eef2f8');
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyAppearance());
 // Sefer'de görünüm değişince (aynı tarayıcıda) uygula

@@ -201,6 +201,10 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 
 ## Sürüm geçmişi
 
+### 2.5.0
+- Renkler Sefer ile aynı: Gece temasında lacivert zemin ve turkuaz/safran vurgular, Gündüz temasında açık mavi-beyaz.
+  Satır İzi Sefer’in Kitaplar sekmesinde aynı uygulamanın parçası gibi görünür.
+
 ### 2.4.1
 - Görünüm ayarları Sefer ile aynı: Tema (Gece / Gündüz / Cihaza göre) ve 5 kademeli yazı boyutu.
   “Sefer ile aynı olsun” (varsayılan) açıkken seçimler Sefer’den alınır ve Sefer’de değişince anında uygulanır.
