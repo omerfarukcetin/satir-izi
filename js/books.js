@@ -8,6 +8,7 @@ import { button, iconButton, pageHeader, emptyState, cover, bookCard, progressBa
 import { fileToCover } from './scanner.js';
 import { openHighlightEditor } from './highlights.js';
 import { exportBook } from './export.js';
+import { pendingCallout } from './review.js';
 
 // ---------- Kitap formu ----------
 export function openBookForm(book = null) {
@@ -171,7 +172,6 @@ export function bookDetailView({ parts }) {
 
   const hls = highlightsOf(book.id);
   const notes = notesOf(book.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const drafts = state.drafts.filter(d => d.bookId === book.id);
 
   const info = el('div', { class: 'book-hero' },
     cover(book, 'lg'),
@@ -191,6 +191,7 @@ export function bookDetailView({ parts }) {
 
   const actions = el('div', { class: 'action-grid' },
     button('Sayfa tara', { icon: 'camera', variant: 'primary', href: `#/tara?kitap=${encodeURIComponent(book.id)}` }),
+    button('Toplu tara', { icon: 'scan', href: `#/toplu?kitap=${encodeURIComponent(book.id)}` }),
     button('Elle alıntı ekle', { icon: 'plus', onClick: async () => { if (await openHighlightEditor({ bookId: book.id })) refresh(); } }),
     button('Not ekle', { icon: 'note', onClick: () => openNoteEditor(book.id) }),
     button('Dışa aktar', { icon: 'download', onClick: async () => {
@@ -214,9 +215,7 @@ export function bookDetailView({ parts }) {
       navigate('kitaplar');
     } }));
 
-  const draftBox = drafts.length ? el('div', { class: 'callout' },
-    icon('alert'), el('div', {}, el('strong', {}, `${drafts.length} tarama onay bekliyor`),
-      el('div', { class: 'row-actions' }, drafts.map(d => button(`${d.page ? 'Sayfa ' + d.page : 'Sayfa ?'} · ${d.items.length} alıntı`, { small: true, href: `#/onay/${encodeURIComponent(d.id)}` }))))) : null;
+  const draftBox = pendingCallout(book.id);
 
   const review = book.review?.trim() ? el('section', { class: 'card' }, el('h2', {}, 'Değerlendirmem'), el('p', { class: 'prewrap' }, book.review)) : null;
 

@@ -1,6 +1,6 @@
 // Ortak yardımcılar. Bütün DOM üretimi textContent üzerinden yapılır; innerHTML kullanılmaz.
 
-export const APP_VERSION = '2.0.1';
+export const APP_VERSION = '2.1.0';
 
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];

@@ -3,12 +3,13 @@
 // v1 (ilk sürüm): tek bir "data" deposu; "books" anahtarında alıntıları gömülü kitap dizisi,
 //                 "model" anahtarında model kimliği vardı.
 // v2: books / highlights / notes / scanJobs / scanDrafts / settings depoları.
+// v3: scanJobs deposuna jobId dizini (toplu tarama: iş kaydı + fotoğraf kayıtları aynı depoda).
 //     Eski "data" deposu silinmez; güvenlik için olduğu gibi bırakılır.
 
 import { uid, nowISO } from './utils.js';
 
 export const DB_NAME = 'satir-izi';
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
 export const OLD_DEFAULT_MODEL = 'gemini-2.5-flash-lite';
 export const DEFAULT_MODEL = 'gemini-3.5-flash-lite';
 
@@ -164,7 +165,7 @@ function upgrade(db, tx, oldVersion) {
   ensure('books', { keyPath: 'id' }, [['status', 'status'], ['updatedAt', 'updatedAt']]);
   ensure('highlights', { keyPath: 'id' }, [['bookId', 'bookId'], ['createdAt', 'createdAt']]);
   ensure('notes', { keyPath: 'id' }, [['bookId', 'bookId']]);
-  ensure('scanJobs', { keyPath: 'id' }, [['bookId', 'bookId']]);
+  ensure('scanJobs', { keyPath: 'id' }, [['bookId', 'bookId'], ['jobId', 'jobId']]);
   ensure('scanDrafts', { keyPath: 'id' }, [['bookId', 'bookId']]);
   const settings = ensure('settings', { keyPath: 'key' });
 

@@ -60,7 +60,7 @@ const newer = (a, b) => (Date.parse(a.updatedAt) || 0) >= (Date.parse(b.updatedA
  */
 export async function applyRestore(data, mode) {
   const result = { books: 0, highlights: 0, notes: 0, skipped: 0 };
-  const stores = ['books', 'highlights', 'notes', 'scanDrafts'];
+  const stores = ['books', 'highlights', 'notes', 'scanDrafts', 'scanJobs'];
 
   if (mode === 'overwrite') {
     await db.runTx(stores, 'readwrite', tx => {

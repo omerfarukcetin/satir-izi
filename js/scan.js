@@ -156,6 +156,7 @@ export async function scanView({ params }) {
     pageHeader('Sayfa tara'),
     blockers,
     field('Hangi kitap?', bookSel),
+    el('p', { class: 'muted small' }, 'Birden fazla sayfa mı? ', el('a', { href: `#/toplu?kitap=${encodeURIComponent(preferred)}`, onclick: e => { e.preventDefault(); location.hash = `#/toplu?kitap=${encodeURIComponent(bookSel.value)}`; } }, 'Toplu tara'), ' ile hepsini tek seferde yükle.'),
     picker, cameraInput, galleryInput,
     editor.root, tools, cropHint,
     field('Sayfa numarası (isteğe bağlı)', pageInput),

@@ -69,10 +69,21 @@ export async function canvasToJpeg(src, maxEdge = 2048, quality = 0.85) {
   }
   const blob = await new Promise((res, rej) => c.toBlob(b => (b ? res(b) : rej(new Error('Görsel hazırlanamadı.'))), 'image/jpeg', quality));
   const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
-  return { dataUrl, base64: dataUrl.slice(dataUrl.indexOf(',') + 1), mimeType: 'image/jpeg', bytes: blob.size, width: c.width, height: c.height };
+  return { blob, dataUrl, base64: dataUrl.slice(dataUrl.indexOf(',') + 1), mimeType: 'image/jpeg', bytes: blob.size, width: c.width, height: c.height };
 }
 
 /** Küçük kapak görseli (kitap kapağı için). */
+export function blobToBase64(blob) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+}
+
+/** Görsel dosyasını API'ye uygun JPEG Blob'a dönüştürür (isteğe bağlı döndürme ile). */
+export async function prepareBlob(file, maxEdge, rotate = 0) {
+  let c = await fileToCanvas(file);
+  if (rotate) c = rotateCanvas(c, rotate);
+  return (await canvasToJpeg(c, maxEdge)).blob;
+}
+
 export async function fileToCover(file) {
   const c = await fileToCanvas(file);
   return (await canvasToJpeg(c, 480, 0.8)).dataUrl;

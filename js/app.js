@@ -6,7 +6,10 @@ import { loadState } from './store.js';
 import * as router from './router.js';
 import { homeView } from './home.js';
 import { booksView, bookDetailView } from './books.js';
-import { highlightsView, reviewView } from './highlights.js';
+import { highlightsView } from './highlights.js';
+import { reviewView } from './review.js';
+import { batchView } from './batch.js';
+import { recoverJobs } from './batch-runner.js';
 import { scanView } from './scan.js';
 import { settingsView, applyAppearance } from './settings.js';
 
@@ -83,6 +86,8 @@ async function init() {
     return;
   }
 
+  await recoverJobs().catch(e => console.warn(e));
+
   const migrated = await getSetting('migratedFromV1Count', null);
   if (migrated && !(await getSetting('migrationNoticeShown', false))) {
     await setSetting('migrationNoticeShown', true);
@@ -94,6 +99,7 @@ async function init() {
   router.register('kitap', bookDetailView, 'books');
   router.register('tara', scanView, 'scan');
   router.register('onay', reviewView, 'scan');
+  router.register('toplu', batchView, 'scan');
   router.register('alintilar', highlightsView, 'highlights');
   router.register('ayarlar', settingsView, 'settings');
   router.setup($('#view'), markNav);

@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v2.0.0)
+## Özellikler (v2.1.0)
 
 - **Kitaplar:** ad ve yazar zorunlu; yayınevi, kapak, ISBN, kategori, sayfa sayıları, tarihler, okuma durumu
   (Okunacak / Okunuyor / Tamamlandı / Yarım bırakıldı), puan ve kişisel değerlendirme isteğe bağlı.
@@ -25,6 +25,15 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
   sayfa numarası değiştirme, silme, yeni alıntı ekleme, birleştirme, imleçten ayırma, seçerek kaydetme.
   Modelin emin olmadığı alıntılar sarı ile işaretlenir, mükerrer alıntılar uyarı verir.
   Taslak IndexedDB'ye kaydedilir; uygulama kapansa bile kaldığın yerden devam edersin.
+- **Toplu tarama:** aynı kitabın birden fazla sayfasını (en fazla 60) tek seferde ekle: galeriden çoklu seçim,
+  kamerayla tek tek çekim, sürükle-bırak. Listeden çıkarma, sıra değiştirme, döndürme ve kırpma.
+  Fotoğraflar **sırayla** taranır (paralel istek yok); aralarına ayarlanabilir bekleme konur.
+  İlerleme ekranı: toplam, tamamlanan, bekleyen, başarısız, bulunan alıntı ve yüzde.
+  Duraklat, hemen durdur, başarısızları yeniden dene. Kota dolunca veya bağlantı kopunca iş kendiliğinden duraklar;
+  tamamlananlar kaybolmaz. Uygulama kapanırsa iş “duraklatıldı” olarak açılır ve kaldığı yerden devam eder.
+  Bütün sonuçlar tek bir **toplu onay** ekranında kontrol edilip kaydedilir.
+  Not: tarayıcı arka plandaki işlemi durdurabilir; tarama sırasında ekran açık tutulmalıdır
+  (destekleyen tarayıcılarda ekranın kapanması engellenir).
 - **Alıntılarım:** tüm kitaplarda Türkçe büyük/küçük harf duyarlı arama, kitap ve favori filtresi,
   kişisel not ve etiketler, panoya kopyalama.
 - **Ana sayfa:** kitap / okunan / tamamlanan / alıntı / not sayıları, okunmakta olan kitaplar, son alıntılar,
@@ -108,7 +117,10 @@ satir-izi/
     ├── home.js             Ana sayfa
     ├── books.js            Kitap listesi, detay, kitap formu, kişisel notlar
     ├── highlights.js       Alıntı düzenleme, Alıntılarım, onay ekranı
-    ├── scan.js             Tara ekranı
+    ├── scan.js             Tara ekranı (tek sayfa)
+    ├── batch.js            Toplu tarama: hazırlık, ilerleme, toplu onay
+    ├── batch-runner.js     Sıralı tarama kuyruğu (duraklat, devam, kurtarma)
+    ├── review.js           Ortak onay bileşeni ve tek sayfa onay ekranı
     ├── scanner.js          Görsel açma, döndürme, kırpma, optimize etme
     ├── gemini.js           Gemini API, sistem talimatı, JSON şeması, Türkçe hata eşleme
     ├── backup.js           JSON yedekleme / geri yükleme
@@ -133,12 +145,20 @@ python3 -m http.server 8000
 
 ### Veritabanı
 
-`satir-izi` veritabanı, sürüm 2: `books`, `highlights`, `notes`, `scanJobs`, `scanDrafts`, `settings`.
+`satir-izi` veritabanı, sürüm 3: `books`, `highlights`, `notes`, `scanJobs`, `scanDrafts`, `settings`.
+`scanJobs` deposunda toplu tarama iş kayıtları (`kind: 'job'`) ve fotoğrafları (`kind: 'photo'`, Blob olarak) tutulur;
+fotoğraflar onaydan sonra silinir ve yedeğe girmez.
 İlk sürümün `data` deposu (alıntıları gömülü kitap dizisi) açılışta otomatik olarak yeni depolara taşınır.
 Kayıt kimlikleri korunur. Eski depo güvenlik için silinmeden bırakılır. Eski varsayılan modeli kullananlar
 `gemini-3.5-flash-lite` modeline geçirilir; özel model seçimi korunur.
 
 ## Sürüm geçmişi
+
+### 2.1.0
+- Toplu fotoğraf tarama: çoklu seçim, sıralama, döndürme/kırpma, sıralı kuyruk, bekleme süresi, ilerleme ekranı,
+  duraklat/durdur/yeniden dene, kota ve kesinti sonrası devam, toplu onay ekranı.
+- Kitap detayına “Toplu tara” butonu; ana sayfa ve kitap ekranında bekleyen taramalar.
+- Veritabanı sürüm 3 (yalnızca dizin eklendi; veri değişmedi).
 
 ### 2.0.1
 - Yazı tipi diğer projelerle aynı yapıldı: cihaza gömülü Plus Jakarta Sans (değişken 200–800, Latin + Latin Genişletilmiş). İnternetsiz de çalışır.
@@ -160,5 +180,5 @@ Kayıt kimlikleri korunur. Eski depo güvenlik için silinmeden bırakılır. Es
 
 ## Sonraki aşama (planlanan)
 
-Toplu fotoğraf tarama ve kuyruk (`scanJobs`), ilerleme ekranı, kesintiden sonra devam etme, seçili sayfaların
-fotoğrafını saklama, gelişmiş etiket/kategori yönetimi, PDF çıktısı.
+Gelişmiş arama filtreleri (etiket, kategori, tarih, kitap durumu) ve etiket yönetimi, seçili sayfaların fotoğrafını
+saklama, PDF çıktısı; ardından Aşama 3 (tekrar sistemi, istatistikler, yapay zekâ etiketleme, senkronizasyon).
