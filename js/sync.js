@@ -19,7 +19,7 @@ const BACKUP_MARK = 'satir-izi-cloud-backup';
 
 let sb = null;
 let user = null;
-let syncing = false, again = false;
+let syncing = false;
 const listeners = new Set();
 export const status = { state: 'off', message: '', at: null };
 
@@ -176,10 +176,17 @@ async function applyLocal(merged, local) {
 let afterApply = () => {};
 export function onRemoteApplied(fn) { afterApply = fn; }
 
-export async function syncNow({ authoritative = false } = {}) {
+let chain = Promise.resolve();
+/** Eşitler. Eşitlemeler sırayla çalışır; bir eşitleme sürüyorsa bu çağrı onun bitmesini bekler. */
+export function syncNow(opts = {}) {
+  const p = chain.then(() => runSync(opts));
+  chain = p.catch(() => {});
+  return p;
+}
+
+async function runSync({ authoritative = false } = {}) {
   if (!sb || !user) return;
   if (navigator.onLine === false) { setStatus('offline', 'Çevrimdışı · değişiklikler cihazda duruyor'); return; }
-  if (syncing) { again = true; return; }
   syncing = true;
   setStatus('syncing', 'Eşitleniyor…');
   try {
@@ -224,7 +231,6 @@ export async function syncNow({ authoritative = false } = {}) {
     setStatus('error', dbMessage(e));
   } finally {
     syncing = false;
-    if (again) { again = false; scheduleSync(); }
   }
 }
 

@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v2.2.0)
+## Özellikler (v2.3.0)
 
 - **Kitaplar:** ad ve yazar zorunlu; yayınevi, kapak, ISBN, kategori, sayfa sayıları, tarihler, okuma durumu
   (Okunacak / Okunuyor / Tamamlandı / Yarım bırakıldı), puan ve kişisel değerlendirme isteğe bağlı.
@@ -41,6 +41,10 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
   bütün cihazlarda eşitlenir. Eşitleme **kayıt düzeyindedir**: iki cihazda ayrı ayrı eklenen alıntıların ikisi de korunur,
   aynı kayıt iki yerde değiştiyse yeni olan kazanır, silinenler diğer cihazlardan da silinir. Her günün son hâli
   30 gün boyunca otomatik bulut yedeği olarak saklanır (API anahtarı hariç). Giriş yapmadan kullanım aynen sürer.
+- **SEFER bağlantısı:** Satır İzi, SEFER’in içinde “Kitaplar” sekmesi olarak açılır (ayrıca bağımsız da çalışır).
+  SEFER’deki okuma görevi bir Satır İzi kitabına bağlanabilir: SEFER’de girilen sayfalar Satır İzi’deki ilerlemeye,
+  Satır İzi’de “Bugün okudum” ile girilenler SEFER’deki göreve işlenir; kitap bitince iki tarafta da tamamlanır.
+  SEFER’in Bugün ekranında arşivden “günün satırı” gösterilir.
 - **Ana sayfa:** kitap / okunan / tamamlanan / alıntı / not sayıları, okunmakta olan kitaplar, son alıntılar,
   rastgele eski bir alıntı, bekleyen taramalar, yedek hatırlatması.
 - **Ayarlar:** Gemini anahtarı ve model kimliği, bağlantı testi, tarama çözünürlüğü, açık/koyu tema,
@@ -137,6 +141,7 @@ satir-izi/
     ├── config.js           Supabase adresi ve herkese açık anahtar
     ├── sync.js             Giriş, kayıt düzeyinde eşitleme, bulut yedeği
     ├── account.js          Hesap arayüzü (giriş, çıkış, bulut yedekleri)
+    ├── bridge.js           SEFER köprüsü (bağımsız modül; SEFER içe aktarır)
     ├── vendor/supabase.js  supabase-js 2.45.4 (Emanet ile aynı dosya)
     ├── router.js           Hash yönlendirici (#/kitaplar, #/kitap/:id, #/tara, #/onay/:id …)
     ├── database.js         IndexedDB, şema, v1 → v2 migrasyonu, kayıt fabrikaları
@@ -179,7 +184,24 @@ fotoğraflar onaydan sonra silinir ve yedeğe girmez.
 Kayıt kimlikleri korunur. Eski depo güvenlik için silinmeden bırakılır. Eski varsayılan modeli kullananlar
 `gemini-3.5-flash-lite` modeline geçirilir; özel model seçimi korunur.
 
+## SEFER ile bağlantı (geliştirici notu)
+
+İki uygulama aynı alan adında (`omerfarukcetin.github.io`) çalışır; bu yüzden aynı tarayıcıda Supabase oturumu ve
+cihazdaki veriler ortaktır. SEFER, `../satir-izi/js/bridge.js` modülünü içe aktarır. Köprü:
+
+- Satır İzi veritabanını **sürüm belirtmeden** açar, hiçbir zaman şema yükseltmesi tetiklemez ve her işlemden sonra kapatır.
+- `listBooks`, `getBook`, `setProgress` (SEFER → mutlak okunan sayfa, bitti bilgisi, görev bilgisi), `unlink`,
+  `quoteOfDay`, `queuePages` / `takeInbox` (Satır İzi → SEFER “bugün okudum” gelen kutusu) sunar.
+- Sayfa ilerlemesinin tek kaynağı SEFER’in günlük kayıtlarıdır; böylece aynı sayfa iki kez sayılmaz.
+  Bağlı kitapta Satır İzi’deki “Okunan sayfa” alanı salt okunurdur.
+- Köprünün dışa açtığı işlevler değiştirilirken SEFER’deki çağrılar da güncellenmelidir.
+
 ## Sürüm geçmişi
+
+### 2.3.0
+- SEFER bağlantısı: köprü modülü, SEFER içinde gömülü düzen, bağlı kitapta SEFER kutusu ve “Bugün okudum”,
+  masaüstü menüsünde ve Ayarlar’da SEFER’e geçiş.
+- Eşitlemeler artık sırayla çalışır; “Şimdi eşitle” işlemin bitmesini bekler.
 
 ### 2.2.0
 - Hesap ve eşitleme: Emanet/SEFER ile aynı Supabase hesabıyla giriş, kayıt düzeyinde birleştirme, silme izleri,

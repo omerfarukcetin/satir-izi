@@ -1,7 +1,7 @@
 // Uygulama girişi: kabuk, navigasyon, yönlendirme, Service Worker ve başlatma.
 import { $, el, toast } from './utils.js';
 import { icon } from './icons.js';
-import { openDB, onUpgradeBlocked, requestPersistence, getSetting, setSetting } from './database.js';
+import { openDB, onUpgradeBlocked, requestPersistence, getSetting, setSetting, notifyLocalChange } from './database.js';
 import { loadState } from './store.js';
 import * as router from './router.js';
 import { homeView } from './home.js';
@@ -15,6 +15,10 @@ import { settingsView, applyAppearance } from './settings.js';
 import { initSync, onSyncChange, onRemoteApplied } from './sync.js';
 import { wireSync } from './account.js';
 
+// SEFER içinde (iframe) açıldıysa gömülü düzen
+export const EMBEDDED = new URLSearchParams(location.search).get('embed') === 'sefer' || window.top !== window.self;
+if (EMBEDDED) document.documentElement.classList.add('embedded');
+
 const NAV = [
   { key: 'home', href: '#/', label: 'Ana Sayfa', icon: 'home' },
   { key: 'books', href: '#/kitaplar', label: 'Kitaplarım', icon: 'books' },
@@ -26,9 +30,11 @@ const NAV = [
 function buildNav() {
   const links = NAV.map(n => el('a', { class: `nav-link${n.primary ? ' nav-primary' : ''}`, href: n.href, dataset: { key: n.key } },
     el('span', { class: 'nav-icon' }, icon(n.icon, { size: 22 })), el('span', { class: 'nav-label' }, n.label)));
-  $('#nav').replaceChildren(
+  $('#nav').replaceChildren(...[
     el('a', { class: 'nav-brand', href: '#/' }, el('img', { src: 'assets/icons/icon-192.png', alt: '', width: 36, height: 36 }), el('span', {}, 'Satır İzi')),
-    el('div', { class: 'nav-links' }, links));
+    el('div', { class: 'nav-links' }, links),
+    EMBEDDED ? null : el('a', { class: 'nav-extra', href: '../sefer/', title: 'SEFER — günlük takip' }, el('span', { class: 'nav-icon' }, icon('chevron', { size: 18 })), el('span', {}, 'SEFER’e geç')),
+  ].filter(Boolean));
 }
 
 function markNav(key) {
@@ -119,6 +125,14 @@ async function init() {
     if (relevant && !typing && !document.querySelector('dialog[open]')) router.refresh();
   });
   initSync().catch(e => console.warn('Eşitleme başlatılamadı', e));
+
+  // SEFER köprüsü veritabanına yazdığında (ör. sayfa ilerlemesi) yeniden yükle ve eşitle
+  window.addEventListener('storage', async e => {
+    if (e.key !== 'satir-izi-external-change') return;
+    await loadState();
+    notifyLocalChange();
+    if (!document.querySelector('dialog[open]')) router.refresh();
+  });
 
   // Veri yazıldıktan sonra kalıcı depolama iste (Chrome kurulu PWA'da sessizce verir)
   requestPersistence();

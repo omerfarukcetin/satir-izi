@@ -9,6 +9,8 @@ import { fileToCover } from './scanner.js';
 import { openHighlightEditor } from './highlights.js';
 import { exportBook } from './export.js';
 import { pendingCallout } from './review.js';
+import { queuePages, pendingInbox } from './bridge.js';
+import { formatDate as fmtDay } from './utils.js';
 
 // ---------- Kitap formu ----------
 export function openBookForm(book = null) {
@@ -23,7 +25,7 @@ export function openBookForm(book = null) {
       category: el('input', { maxlength: 80, value: b.category || '', list: 'category-list' }),
       status: select(BOOK_STATUSES, b.status || (book ? 'okunacak' : 'okunuyor')),
       totalPages: el('input', { type: 'number', min: 0, max: 100000, inputmode: 'numeric', value: b.totalPages ?? '' }),
-      readPages: el('input', { type: 'number', min: 0, max: 100000, inputmode: 'numeric', value: b.readPages ?? '' }),
+      readPages: el('input', { type: 'number', min: 0, max: 100000, inputmode: 'numeric', value: b.readPages ?? '', disabled: !!b.sefer }),
       startDate: el('input', { type: 'date', value: b.startDate || '' }),
       endDate: el('input', { type: 'date', value: b.endDate || '' }),
       rating: select([{ value: '0', label: 'Puan yok' }, ...[1, 2, 3, 4, 5].map(n => ({ value: String(n), label: '★'.repeat(n) + '☆'.repeat(5 - n) }))], String(b.rating || 0)),
@@ -72,7 +74,7 @@ export function openBookForm(book = null) {
           field('Yayınevi', f.publisher),
           field('ISBN', f.isbn),
           field('Toplam sayfa', f.totalPages),
-          field('Okunan sayfa', f.readPages),
+          field('Okunan sayfa', f.readPages, b.sefer ? 'SEFER’e bağlı: okunan sayfa SEFER’deki kayıtlardan gelir.' : undefined),
           field('Başlama tarihi', f.startDate),
           field('Bitirme tarihi', f.endDate),
           field('Puan', f.rating)),
@@ -87,7 +89,7 @@ export function openBookForm(book = null) {
       const title = f.title.value.trim(), author = f.author.value.trim();
       if (!title || !author) { error.textContent = 'Kitap adı ve yazar zorunludur.'; error.hidden = false; (title ? f.author : f.title).focus(); return; }
       const total = f.totalPages.value === '' ? null : Number(f.totalPages.value);
-      const read = f.readPages.value === '' ? null : Number(f.readPages.value);
+      const read = b.sefer ? (b.readPages ?? null) : (f.readPages.value === '' ? null : Number(f.readPages.value));
       if (total !== null && read !== null && read > total) { error.textContent = 'Okunan sayfa, toplam sayfadan büyük olamaz.'; error.hidden = false; return; }
       if (f.startDate.value && f.endDate.value && f.endDate.value < f.startDate.value) { error.textContent = 'Bitirme tarihi başlama tarihinden önce olamaz.'; error.hidden = false; return; }
       try {
@@ -216,6 +218,7 @@ export function bookDetailView({ parts }) {
     } }));
 
   const draftBox = pendingCallout(book.id);
+  const seferBox = seferInfo(book);
 
   const review = book.review?.trim() ? el('section', { class: 'card' }, el('h2', {}, 'Değerlendirmem'), el('p', { class: 'prewrap' }, book.review)) : null;
 
@@ -239,10 +242,57 @@ export function bookDetailView({ parts }) {
 
   return el('section', {},
     el('a', { class: 'back-link', href: '#/kitaplar' }, icon('back', { size: 18 }), 'Kitaplarım'),
-    info, actions, draftBox, review, notesSection,
+    info, seferBox, actions, draftBox, review, notesSection,
     el('div', { class: 'section-head' }, el('h2', {}, `Alıntılar (${hls.length})`), hls.length > 1 ? sortSel : null),
     hls.length ? el('div', { class: 'hl-list' }, sorted.map(h => highlightCard(h, { onEdit: edit })))
       : emptyState('Henüz alıntı yok. Altını çizdiğin bir sayfanın fotoğrafını tara veya elle ekle.'));
+}
+
+function seferInfo(book) {
+  const embedded = document.documentElement.classList.contains('embedded');
+  const target = embedded ? '_top' : undefined;
+  if (!book.sefer) {
+    if (book.status !== 'okunuyor') return null;
+    return el('p', { class: 'muted small sefer-hint' }, icon('chevron', { size: 14 }),
+      'Bu kitabı SEFER’deki bir okuma görevine bağlarsan sayfa ilerlemen ve serin otomatik güncellenir. SEFER’de görevi aç → “Kitabı değiştir” → “Satır İzi’nden seç”. ',
+      el('a', { href: '../sefer/#bugun', target }, 'SEFER’i aç'));
+  }
+  const s = book.sefer;
+  if (book.status === 'tamamlandi') {
+    return el('div', { class: 'sefer-box' }, el('div', {}, el('strong', {}, 'SEFER’de tamamlandı'), el('span', { class: 'muted small' }, ` · ${s.task}`)),
+      button('SEFER’de aç', { small: true, href: '../sefer/#takip', attrs: { target } }));
+  }
+  const pending = pendingInbox(book.id);
+  const parts = [s.goal ? `günde ${s.goal} sayfa` : null, s.streak ? `${s.streak} günlük seri` : null, s.due ? `hedef ${fmtDay(s.due)}` : null].filter(Boolean);
+  return el('div', { class: 'sefer-box' },
+    el('div', {}, el('strong', {}, 'SEFER’de takip ediliyor'), el('span', { class: 'muted small' }, ` · ${s.task}${parts.length ? ' · ' + parts.join(' · ') : ''}`),
+      pending ? el('p', { class: 'small warn-text' }, `${pending} sayfa SEFER açıldığında işlenecek.`) : null),
+    el('div', { class: 'row-actions' },
+      button('Bugün okudum', { small: true, variant: 'primary', icon: 'plus', onClick: () => openReadDialog(book) }),
+      button('SEFER’de aç', { small: true, href: '../sefer/#bugun', attrs: { target } })));
+}
+
+function openReadDialog(book) {
+  const inp = el('input', { type: 'number', min: 1, max: 2000, inputmode: 'numeric', value: '10', 'aria-label': 'Sayfa sayısı' });
+  const embedded = document.documentElement.classList.contains('embedded');
+  const dlg = el('dialog', { class: 'dialog' },
+    el('h2', {}, 'Bugün kaç sayfa okudun?'),
+    el('p', { class: 'muted' }, `${book.title} · Kayıt SEFER’deki “${book.sefer.task}” görevine eklenir; serin ve ilerlemen oradan hesaplanır.`),
+    inp,
+    el('div', { class: 'row-actions end' },
+      button('Vazgeç', { onClick: () => dlg.close() }),
+      button('Kaydet', { variant: 'primary', icon: 'check', onClick: () => {
+        const n = Math.round(Number(inp.value));
+        if (!(n > 0)) { toast('Bir sayfa sayısı yaz.'); return; }
+        queuePages(book.id, n);
+        dlg.close();
+        toast(embedded ? `${n} sayfa SEFER’e kaydedildi.` : `${n} sayfa SEFER’e iletildi; SEFER’i açtığında işlenecek.`, embedded ? {} : { actionLabel: 'SEFER’i aç', action: () => { location.href = '../sefer/#bugun'; } });
+        refresh();
+      } })));
+  dlg.addEventListener('close', () => dlg.remove());
+  document.body.append(dlg);
+  dlg.showModal();
+  inp.select();
 }
 
 function fact(k, v) { return el('div', {}, el('dt', {}, k), el('dd', {}, v)); }

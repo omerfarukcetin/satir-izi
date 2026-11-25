@@ -178,6 +178,12 @@ export async function settingsView() {
       el('li', {}, 'API anahtarın JSON yedeklerine, otomatik bulut yedeklerine, dışa aktarma dosyalarına ve uygulama önbelleğine hiçbir zaman eklenmez.')),
     el('p', {}, el('a', { href: 'https://ai.google.dev/gemini-api/terms', target: '_blank', rel: 'noopener noreferrer' }, 'Gemini API kullanım koşulları')));
 
+  // --- SEFER ---
+  const embedded = document.documentElement.classList.contains('embedded');
+  const sefer = card('SEFER ile bağlantı',
+    el('p', {}, 'Satır İzi, SEFER’deki kitap okuma görevleriyle bağlantılıdır: SEFER’de bir görevi Satır İzi kitabına bağlarsan okuduğun sayfalar iki tarafta da görünür, SEFER’in Bugün ekranında günün alıntısı çıkar.'),
+    embedded ? el('p', { class: 'muted small' }, 'Şu an SEFER’in içinden açıyorsun.') : button('SEFER’e geç', { icon: 'chevron', href: '../sefer/' }));
+
   // --- Tehlikeli bölge ---
   const danger = card('Tüm verileri sil',
     el('p', {}, 'Bu cihazdaki bütün kitaplar, alıntılar, notlar, taslaklar ve ayarlar silinir. Geri alınamaz.'),
@@ -206,6 +212,6 @@ export async function settingsView() {
   return el('section', { class: 'settings' },
     pageHeader('Ayarlar'),
     await accountCard(),
-    gemini, scan, appearance, backup, storage, install, privacy, danger,
+    gemini, scan, appearance, backup, sefer, storage, embedded ? null : install, privacy, danger,
     el('p', { class: 'muted small center' }, `Satır İzi v${APP_VERSION} · Okudukların kaybolmasın.`));
 }
