@@ -282,7 +282,7 @@ select { appearance: auto; }
 .hl-book { color: var(--muted); font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
 .hl-text {
   margin: .7rem 0 .8rem; padding-left: .9rem; border-left: 3px solid var(--green-soft);
-  font: 1.14rem/1.65 var(--serif); white-space: pre-wrap; overflow-wrap: anywhere;
+  font: 500 1rem/1.6 var(--serif); white-space: pre-wrap; overflow-wrap: anywhere;
 }
 .hl-comment { background: var(--earth-soft); border-radius: 10px; padding: .6rem .8rem; margin: 0 0 .7rem; }
 .hl-comment p { margin: .15rem 0 0; white-space: pre-wrap; font-size: .95rem; }
@@ -320,7 +320,7 @@ select { appearance: auto; }
 .review-photo img { display: block; width: 100%; max-height: 75vh; object-fit: contain; margin-top: .5rem; border-radius: 8px; background: var(--surface-2); }
 .review-list { display: grid; gap: .75rem; margin-top: .75rem; }
 .review-item { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: .75rem .9rem; }
-.review-item textarea { font: 1.05rem/1.6 var(--serif); }
+.review-item textarea { font: 1rem/1.6 var(--serif); }
 .review-item.needs-review { border-color: var(--warn); background: color-mix(in srgb, var(--warn-soft) 55%, var(--surface)); }
 .review-item.unselected { opacity: .55; }
 .review-item-head { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-bottom: .4rem; }
