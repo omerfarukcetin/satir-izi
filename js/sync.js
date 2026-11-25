@@ -83,7 +83,7 @@ function sanitizeRemote(d) {
   }
   const settings = {};
   if (d.settings && typeof d.settings === 'object') {
-    for (const k of db.SYNCED_SETTINGS) if (k in d.settings && (typeof d.settings[k] === 'string' || typeof d.settings[k] === 'number')) settings[k] = d.settings[k];
+    for (const k of db.SYNCED_SETTINGS) if (k in d.settings && ['string', 'number', 'boolean'].includes(typeof d.settings[k])) settings[k] = d.settings[k];
   }
   return {
     schemaVersion: Number(d.schemaVersion) || 0,

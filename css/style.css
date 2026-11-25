@@ -29,8 +29,6 @@
   --nav-h: 68px;
   font-size: 100%;
 }
-:root[data-font="large"] { font-size: 112.5%; }
-:root[data-font="xlarge"] { font-size: 125%; }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -424,6 +422,9 @@ dialog .sticky-actions { bottom: 0; background: var(--surface); padding: .6rem 0
 .sync-error, .sync-offline { color: var(--warn); }
 
 /* ---------- Ayarlar ---------- */
+.seg { flex-wrap: wrap; overflow: visible; }
+.seg .chip-btn:disabled { opacity: .55; cursor: default; }
+.seg-label { margin-top: .9rem; }
 .settings-card h2 { font-size: 1.15rem; }
 .plain-list { padding-left: 1.1rem; margin: .5rem 0; }
 .plain-list li { margin: .35rem 0; }

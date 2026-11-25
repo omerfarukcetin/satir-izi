@@ -11,17 +11,58 @@ import { exportAll } from './export.js';
 import { accountCard } from './account.js';
 import * as sync from './sync.js';
 
-// ---- Tema ve yazı boyutu ----
+// ---- Tema ve yazı boyutu (Sefer ile aynı seçenekler) ----
+// Tema: dark (Gece) · light (Gündüz) · auto (Cihaza göre). Yazı boyutu: 0.8 · 0.9 · 1 · 1.12 · 1.25.
+// "Sefer ile aynı" açıkken (varsayılan) seçimler Sefer'den okunur (aynı alan adı → aynı localStorage).
+export const THEMES = [['dark', 'Gece'], ['light', 'Gündüz'], ['auto', 'Cihaza göre']];
+export const FONT_SCALES = [['0.8', 'Çok küçük'], ['0.9', 'Küçük'], ['1', 'Normal'], ['1.12', 'Büyük'], ['1.25', 'Çok büyük']];
+const OLD_FONT = { normal: 1, large: 1.12, xlarge: 1.25 };
+
+export function seferUI() {
+  try {
+    const raw = localStorage.getItem('sefer-v1');
+    if (!raw) return null;
+    const ui = JSON.parse(raw)?.ui;
+    if (!ui) return null;
+    return { theme: ['dark', 'light', 'auto'].includes(ui.theme) ? ui.theme : 'dark', font: Number(ui.font) > 0 ? Number(ui.font) : 1 };
+  } catch { return null; }
+}
+
+/** Geçerli görünüm: { theme, font, source: 'sefer' | 'own' } */
+export async function currentAppearance() {
+  const embedded = document.documentElement.classList.contains('embedded');
+  const follow = embedded || (await getSetting('followSefer', true));
+  const sf = follow ? seferUI() : null;
+  if (sf) return { ...sf, source: 'sefer' };
+  let theme = await getSetting('theme', 'auto');
+  if (theme === 'system') theme = 'auto';
+  let font = Number(await getSetting('fontScale', 0));
+  if (!font) font = OLD_FONT[await getSetting('fontSize', 'normal')] || 1;
+  return { theme, font, source: 'own' };
+}
+
 export async function applyAppearance() {
-  const theme = await getSetting('theme', 'system');
-  const font = await getSetting('fontSize', 'normal');
+  const { theme, font } = await currentAppearance();
   const root = document.documentElement;
-  if (theme === 'system') root.removeAttribute('data-theme'); else root.dataset.theme = theme;
-  root.dataset.font = font;
-  const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+  if (theme === 'auto') root.removeAttribute('data-theme'); else root.dataset.theme = theme;
+  root.style.fontSize = `${Math.round(16 * font * 100) / 100}px`;
+  root.removeAttribute('data-font');
+  const dark = theme === 'dark' || (theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   document.querySelector('meta[name=theme-color]')?.setAttribute('content', dark ? '#171c19' : '#f6f3ea');
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyAppearance());
+// Sefer'de görünüm değişince (aynı tarayıcıda) uygula
+window.addEventListener('storage', e => { if (e.key === 'sefer-v1') applyAppearance(); });
+
+function segmented(options, value, onPick, { disabled = false, label } = {}) {
+  const wrap = el('div', { class: 'chips seg', role: 'group', 'aria-label': label });
+  for (const [v, l] of options) {
+    const b = el('button', { type: 'button', class: 'chip-btn', 'aria-pressed': String(String(value) === v), disabled }, l);
+    b.onclick = async () => { wrap.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); await onPick(v); };
+    wrap.append(b);
+  }
+  return wrap;
+}
 
 let installPrompt = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; });
@@ -30,8 +71,8 @@ const card = (title, ...children) => el('section', { class: 'card settings-card'
 
 export async function settingsView() {
   const model = await getModel();
-  const theme = await getSetting('theme', 'system');
-  const font = await getSetting('fontSize', 'normal');
+  const look = await currentAppearance();
+  const followSefer = await getSetting('followSefer', true);
   const quality = await getSetting('scanQuality', 'standard');
   const lastBackup = await getSetting('lastBackupAt', null);
 
@@ -87,11 +128,26 @@ export async function settingsView() {
   const scan = card('Tarama', field('Gönderilecek fotoğraf çözünürlüğü', qualitySel));
 
   // --- Görünüm ---
-  const themeSel = select([{ value: 'system', label: 'Sistem ayarı' }, { value: 'light', label: 'Açık' }, { value: 'dark', label: 'Koyu' }], theme);
-  themeSel.onchange = async () => { await setSetting('theme', themeSel.value); applyAppearance(); };
-  const fontSel = select([{ value: 'normal', label: 'Normal' }, { value: 'large', label: 'Büyük' }, { value: 'xlarge', label: 'Çok büyük' }], font);
-  fontSel.onchange = async () => { await setSetting('fontSize', fontSel.value); applyAppearance(); };
-  const appearance = card('Görünüm', el('div', { class: 'grid-2' }, field('Tema', themeSel), field('Yazı boyutu', fontSel)));
+
+  const embeddedNow = document.documentElement.classList.contains('embedded');
+  const hasSefer = !!seferUI();
+  const locked = look.source === 'sefer';
+  const followBox = el('input', { type: 'checkbox', class: 'follow-sefer', checked: followSefer || embeddedNow, disabled: embeddedNow });
+  followBox.onchange = async () => {
+    // Kapatırken o anki görünümden (Sefer'deki son hâl) devam et
+    if (!followBox.checked) { const cur = await currentAppearance(); await setSetting('theme', cur.theme); await setSetting('fontScale', cur.font); }
+    await setSetting('followSefer', followBox.checked);
+    await applyAppearance(); refresh();
+  };
+  const appearance = card('Görünüm',
+    el('label', { class: 'check' }, followBox, el('span', {}, 'Sefer ile aynı olsun')),
+    el('p', { class: 'muted small' }, embeddedNow ? 'Sefer’in içinden açtığın için görünüm Sefer’den alınıyor.'
+      : locked ? 'Tema ve yazı boyutu Sefer’deki ayarlardan alınıyor; Sefer’de değiştirdiğinde burada da değişir.'
+        : followSefer && !hasSefer ? 'Bu cihazda Sefer henüz açılmamış; şimdilik buradaki ayarlar kullanılıyor.' : 'Satır İzi’nin kendi görünüm ayarları kullanılıyor.'),
+    el('span', { class: 'field-label' }, 'Tema'),
+    segmented(THEMES, look.theme, async v => { await setSetting('theme', v); applyAppearance(); }, { disabled: locked, label: 'Tema' }),
+    el('span', { class: 'field-label seg-label' }, 'Yazı boyutu'),
+    segmented(FONT_SCALES, String(look.font), async v => { await setSetting('fontScale', Number(v)); applyAppearance(); }, { disabled: locked, label: 'Yazı boyutu' }));
 
   // --- Yedekleme ---
   const restoreInput = el('input', { type: 'file', accept: 'application/json,.json', hidden: true });

@@ -51,7 +51,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 - **Ana sayfa:** kitap / okunan / tamamlanan / alıntı / not sayıları, okunmakta olan kitaplar, son alıntılar,
   rastgele eski bir alıntı, bekleyen taramalar, yedek hatırlatması.
 - **Ayarlar:** Gemini anahtarı ve model kimliği, bağlantı testi, tarama çözünürlüğü, açık/koyu tema,
-  yazı boyutu, yedekleme/geri yükleme, depolama bilgisi, kurulum yardımı, gizlilik açıklaması, tüm verileri silme (çift onay).
+  yazı boyutu (Sefer ile aynı seçenekler; isteğe bağlı olarak Sefer’i izler), yedekleme/geri yükleme, depolama bilgisi, kurulum yardımı, gizlilik açıklaması, tüm verileri silme (çift onay).
 - **PWA:** ana ekrana eklenebilir, çevrimdışı açılır (arşiv ve elle ekleme çalışır, tarama kapanır),
   yeni sürüm çıktığında “Güncelle” bildirimi gösterir.
 
@@ -200,6 +200,10 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 2.4.1
+- Görünüm ayarları Sefer ile aynı: Tema (Gece / Gündüz / Cihaza göre) ve 5 kademeli yazı boyutu.
+  “Sefer ile aynı olsun” (varsayılan) açıkken seçimler Sefer’den alınır ve Sefer’de değişince anında uygulanır.
 
 ### 2.4.0
 - Kitap formunda otomatik doldurma: kapak/arka kapak fotoğrafı (Gemini) ve ISBN araması (Google Books, Open Library).
