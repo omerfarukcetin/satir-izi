@@ -107,3 +107,35 @@ export async function photoForReading(file) {
   const img = await canvasToJpeg(c, 1600, 0.85);
   return { base64: img.base64, mimeType: img.mimeType };
 }
+
+/** Bağlantıdaki addan katalog araması (Gemini kullanmaz). En iyi eşleşmeyi döner veya null. */
+export async function searchByTitle(q, { signal } = {}) {
+  const query = String(q || '').trim();
+  if (query.length < 3 || navigator.onLine === false) return null;
+  const words = s => normalizeWords(s);
+  const want = words(query);
+  const score = title => { const w = words(title); return want.filter(x => w.includes(x)).length / Math.max(want.length, 1); };
+  const [g, o] = await Promise.all([
+    getJson(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5&printType=books`, signal),
+    getJson(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=5&fields=title,author_name,publisher,number_of_pages_median,isbn`, signal),
+  ]);
+  const cands = [];
+  for (const it of g?.items || []) {
+    const v = it.volumeInfo || {};
+    const isbn = (v.industryIdentifiers || []).find(x => x.type === 'ISBN_13')?.identifier || '';
+    cands.push({ source: 'Google Books', title: clean(v.title), author: clean((v.authors || []).join(', ')), publisher: clean(v.publisher), totalPages: pages(v.pageCount), isbn });
+  }
+  for (const d of o?.docs || []) {
+    const isbn = (d.isbn || []).find(x => /^97[89]/.test(x)) || '';
+    cands.push({ source: 'Open Library', title: clean(d.title), author: clean((d.author_name || []).join(', ')), publisher: clean((d.publisher || [])[0]), totalPages: pages(d.number_of_pages_median), isbn });
+  }
+  const best = cands.map(c => ({ ...c, s: score(c.title) })).filter(c => c.title && c.s >= 0.6).sort((a, b) => b.s - a.s)[0];
+  return best || null;
+}
+
+// Türkçe karakterleri sadeleştirip kelimelere ayırır (bağlantıdaki "yarisi" = "Yarısı")
+function normalizeWords(s) {
+  return String(s || '').toLocaleLowerCase('tr')
+    .replace(/ı/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z0-9]+/).filter(w => w.length > 1);
+}
