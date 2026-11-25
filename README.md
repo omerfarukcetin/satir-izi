@@ -97,6 +97,7 @@ satir-izi/
 ├── manifest.webmanifest
 ├── sw.js                   Service Worker (sürümlü önbellek)
 ├── .nojekyll
+├── fonts/                  Plus Jakarta Sans (gömülü, diğer projelerle aynı)
 ├── assets/icons/           192, 512, maskable, apple-touch
 ├── css/style.css
 └── js/
@@ -138,6 +139,9 @@ Kayıt kimlikleri korunur. Eski depo güvenlik için silinmeden bırakılır. Es
 `gemini-3.5-flash-lite` modeline geçirilir; özel model seçimi korunur.
 
 ## Sürüm geçmişi
+
+### 2.0.1
+- Yazı tipi diğer projelerle aynı yapıldı: cihaza gömülü Plus Jakarta Sans (değişken 200–800, Latin + Latin Genişletilmiş). İnternetsiz de çalışır.
 
 ### 2.0.0
 - Kod modüllere ayrıldı. Alt navigasyon (mobil) ve yan menü (masaüstü), açık/koyu tema, yazı boyutu ve SVG ikonlar eklendi.
