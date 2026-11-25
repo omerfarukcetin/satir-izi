@@ -4,6 +4,7 @@ import { icon } from './icons.js';
 import { markLabel, statusLabel } from './database.js';
 import { bookById, toggleFavorite, deleteHighlight } from './store.js';
 import { refresh } from './router.js';
+import { renderRich, relatedOf, linkChip } from './links.js';
 
 export function button(label, { icon: ic, onClick, variant = 'secondary', small = false, type = 'button', title, disabled, href, attrs = {} } = {}) {
   const cls = `btn btn-${variant}${small ? ' btn-small' : ''}`;
@@ -80,8 +81,9 @@ export function highlightCard(h, { showBook = false, onEdit } = {}) {
   const card = el('article', { class: 'hl-card' + (h.favorite ? ' is-fav' : '') },
     meta,
     el('blockquote', { class: 'hl-text' }, h.text),
-    h.comment?.trim() ? el('div', { class: 'hl-comment' }, el('span', { class: 'hl-comment-label' }, 'Kişisel not'), el('p', {}, h.comment)) : null,
-    h.tags?.length ? el('div', { class: 'tags' }, h.tags.map(t => el('span', { class: 'tag' }, '#' + t))) : null,
+    h.comment?.trim() ? el('div', { class: 'hl-comment' }, el('span', { class: 'hl-comment-label' }, 'Kişisel not'), el('p', {}, renderRich(h.comment))) : null,
+    h.tags?.length ? el('div', { class: 'tags' }, h.tags.map(t => el('a', { class: 'tag', href: `#/alintilar?etiket=${encodeURIComponent(t)}` }, '#' + t))) : null,
+    relatedBlock(h.id),
     el('div', { class: 'hl-actions' },
       el('span', { class: 'muted small' }, formatDate(h.createdAt)),
       el('div', { class: 'row-actions' },
@@ -99,6 +101,12 @@ export function highlightCard(h, { showBook = false, onEdit } = {}) {
           await deleteHighlight(h.id); toast('Alıntı silindi.'); refresh();
         }))));
   return card;
+}
+
+export function relatedBlock(id) {
+  const rel = relatedOf(id);
+  if (!rel.length) return null;
+  return el('details', { class: 'related' }, el('summary', {}, `${rel.length} ilgili kayıt`), el('div', { class: 'link-list' }, rel.map(r => linkChip(r))));
 }
 
 export function field(label, input, hint) {

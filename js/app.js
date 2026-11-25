@@ -9,6 +9,8 @@ import { booksView, bookDetailView } from './books.js';
 import { highlightsView } from './highlights.js';
 import { reviewView } from './review.js';
 import { batchView } from './batch.js';
+import { statsView } from './stats.js';
+import { tagsView } from './tags.js';
 import { recoverJobs } from './batch-runner.js';
 import { scanView } from './scan.js';
 import { settingsView, applyAppearance } from './settings.js';
@@ -108,6 +110,8 @@ async function init() {
   router.register('tara', scanView, 'scan');
   router.register('onay', reviewView, 'scan');
   router.register('toplu', batchView, 'scan');
+  router.register('istatistik', statsView, 'books');
+  router.register('etiketler', tagsView, 'highlights');
   router.register('alintilar', highlightsView, 'highlights');
   router.register('ayarlar', settingsView, 'settings');
   router.setup($('#view'), markNav);

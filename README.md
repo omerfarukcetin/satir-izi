@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v2.4.0)
+## Özellikler (v2.6.0)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -48,6 +48,14 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
   Sefer’deki okuma görevi bir Satır İzi kitabına bağlanabilir: Sefer’de girilen sayfalar Satır İzi’deki ilerlemeye,
   Satır İzi’de “Bugün okudum” ile girilenler Sefer’deki göreve işlenir; kitap bitince iki tarafta da tamamlanır.
   Sefer’in Bugün ekranında arşivden “günün satırı” gösterilir.
+- **Geçmiş kitaplar:** Kitaplarım → “Okuduğum bir kitap” ile bitirme tarihiyle eklenir (okunan sayfa = toplam sayfa).
+- **Toplu elle alıntı:** Kitap sayfasında “Toplu alıntı gir”: alıntıları boş satırla ayırarak yapıştır; “s. 42”, “42:”, “(s. 42)”
+  sayfa işaretleri ayrılır. Eklenme tarihi varsayılan olarak kitabın bitirme tarihidir (istatistikler doğru aya düşer).
+- **İstatistik:** yıl ve ay seçimi; bitirilen kitap, okunan sayfa, alıntı ve not sayıları; aylara göre grafikler;
+  en çok okunan yazarlar, kategoriler, etiketler; yıllar tablosu. Ana sayfada yılın özeti.
+- **Etiketler ve bağlantılar (Obsidian tarzı):** alıntılara ve notlara etiket; notlarda `#etiket` ve `[[Kitap adı]]`;
+  alıntılar/notlar arası iki yönlü “ilgili” bağlantısı; kitapta “Bu kitaba bağlantı verenler”; Etiketler sayfası;
+  Markdown dışa aktarımında `[[...]]` ve `#etiket` korunur.
 - **Ana sayfa:** kitap / okunan / tamamlanan / alıntı / not sayıları, okunmakta olan kitaplar, son alıntılar,
   rastgele eski bir alıntı, bekleyen taramalar, yedek hatırlatması.
 - **Ayarlar:** Gemini anahtarı ve model kimliği, bağlantı testi, tarama çözünürlüğü, açık/koyu tema,
@@ -200,6 +208,10 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 2.6.0
+- Geçmiş kitap ekleme, toplu elle alıntı girişi, İstatistik ekranı, etiket girişi ve Etiketler sayfası,
+  `[[Kitap]]` / `#etiket` bağlantıları, ilgili alıntı/not bağlantıları ve geri bağlantılar.
 
 ### 2.5.0
 - Renkler Sefer ile aynı: Gece temasında lacivert zemin ve turkuaz/safran vurgular, Gündüz temasında açık mavi-beyaz.

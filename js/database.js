@@ -82,6 +82,7 @@ export function makeHighlight(p = {}, now = nowISO()) {
     comment: str(p.comment, 20000),
     tags: strList(p.tags),
     categories: strList(p.categories),
+    links: strList(p.links).slice(0, 50), // ilgili alıntı/not kimlikleri (Obsidian tarzı bağlantı)
     favorite: p.favorite === true,
     source: ['tarama', 'manuel', 'eski', 'yedek'].includes(p.source) ? p.source : 'manuel',
     createdAt: isoOr(p.createdAt, now),
@@ -94,6 +95,8 @@ export function makeNote(p = {}, now = nowISO()) {
     id: typeof p.id === 'string' && p.id ? p.id : uid(),
     bookId: str(p.bookId, 100),
     text: str(p.text, 50000),
+    tags: strList(p.tags),
+    links: strList(p.links).slice(0, 50),
     createdAt: isoOr(p.createdAt, now),
     updatedAt: isoOr(p.updatedAt, isoOr(p.createdAt, now)),
   };

@@ -5,8 +5,10 @@ import { MARK_TYPES } from './database.js';
 import { state, bookById, findDuplicate, saveHighlights } from './store.js';
 import { refresh } from './router.js';
 import { button, pageHeader, emptyState, highlightCard, field, select } from './ui.js';
+import { tagInput, hasTag } from './tags.js';
+import { wikiButton, relatedEditor, syncBacklinks } from './links.js';
+import { saveNote } from './store.js';
 
-const parseTags = s => [...new Set(String(s || '').split(/[,#]/).map(t => t.trim().replace(/\s+/g, ' ')).filter(Boolean))].slice(0, 20);
 
 // ---------- Tek alıntı düzenleyici (manuel ekleme dahil; çevrimdışı çalışır) ----------
 export function openHighlightEditor(h) {
@@ -19,8 +21,8 @@ export function openHighlightEditor(h) {
     const mark = select(MARK_TYPES, h.markType || (isNew ? 'manuel' : 'diger'));
     const comment = el('textarea', { rows: 3, maxlength: 20000, placeholder: 'Bu alıntı sana ne düşündürdü?' });
     comment.value = h.comment || '';
-    const tags = el('input', { value: (h.tags || []).join(', '), placeholder: 'eğitim, ahlak, tarih', list: 'tag-list' });
-    const allTags = [...new Set(state.highlights.flatMap(x => x.tags || []))];
+    const tags = tagInput(h.tags || []);
+    const related = relatedEditor(h.id);
     const fav = el('input', { type: 'checkbox', checked: !!h.favorite });
     const error = el('p', { class: 'form-error', role: 'alert', hidden: true });
     let result = null;
@@ -37,9 +39,10 @@ export function openHighlightEditor(h) {
       try {
         [result] = await saveHighlights([{
           ...h, text: t, page: page.value.trim(), markType: mark.value,
-          comment: comment.value, tags: parseTags(tags.value), favorite: fav.checked,
+          comment: comment.value, tags: tags.get(), favorite: fav.checked, links: related.get(),
           source: h.source || 'manuel',
         }]);
+        await syncBacklinks(result.id, related.get(), { highlight: saveHighlights, note: saveNote });
         dlg.close();
         toast(isNew ? 'Alıntı kaydedildi.' : 'Alıntı güncellendi.');
       } catch (e) { error.textContent = 'Kaydedilemedi: ' + e.message; error.hidden = false; }
@@ -50,8 +53,10 @@ export function openHighlightEditor(h) {
       book ? el('p', { class: 'muted' }, `${book.title} · ${book.author}`) : null,
       field('Kitaptan alıntı *', text),
       el('div', { class: 'grid-2' }, field('Sayfa', page), field('İşaret türü', mark)),
-      el('div', { class: 'comment-field' }, field('Kişisel not (kendi yorumun)', comment)),
-      field('Etiketler', tags, 'Virgülle ayır.'), el('datalist', { id: 'tag-list' }, allTags.map(t => el('option', { value: t }))),
+      el('div', { class: 'comment-field' }, field('Kişisel not (kendi yorumun)', comment, 'Başka bir kitaba [[Kitap adı]], konuya #etiket ile bağlantı verebilirsin.'),
+        el('div', { class: 'row-actions' }, wikiButton(comment))),
+      el('div', { class: 'field' }, el('span', { class: 'field-label' }, 'Etiketler'), tags.root),
+      el('div', { class: 'field' }, el('span', { class: 'field-label' }, 'İlgili alıntılar ve notlar'), related.root),
       el('label', { class: 'check' }, fav, el('span', {}, 'Favorilere ekle')),
       error,
       el('div', { class: 'row-actions end sticky-actions' },
@@ -65,15 +70,17 @@ export function openHighlightEditor(h) {
 }
 
 // ---------- Alıntılarım ----------
-const hlState = { q: '', book: '', fav: false, sort: 'new', limit: 60 };
+const hlState = { q: '', book: '', fav: false, sort: 'new', limit: 60, tag: '' };
 
-export function highlightsView() {
+export function highlightsView({ params } = {}) {
+  if (params?.has('etiket')) { hlState.tag = params.get('etiket') || ''; hlState.limit = 60; }
   const list = el('div', { class: 'hl-list' });
   const countEl = el('p', { class: 'muted small' });
   const draw = () => {
     let items = state.highlights.filter(h => {
       if (hlState.book && h.bookId !== hlState.book) return false;
       if (hlState.fav && !h.favorite) return false;
+      if (hlState.tag && !hasTag(h, hlState.tag, 'comment')) return false;
       if (!hlState.q) return true;
       const b = bookById(h.bookId);
       return includesTr(`${h.text} ${h.comment} ${(h.tags || []).join(' ')} ${h.page} ${b?.title} ${b?.author}`, hlState.q);
@@ -102,7 +109,9 @@ export function highlightsView() {
   favBtn.onclick = () => { hlState.fav = !hlState.fav; favBtn.setAttribute('aria-pressed', String(hlState.fav)); draw(); };
   draw();
   return el('section', {},
-    pageHeader('Alıntılarım'),
+    pageHeader('Alıntılarım', { actions: [button('Etiketler', { icon: 'note', small: true, href: '#/etiketler' })] }),
+    hlState.tag ? el('div', { class: 'active-filter' }, el('span', {}, 'Etiket: ', el('strong', {}, '#' + hlState.tag)),
+      button('Filtreyi kaldır', { small: true, variant: 'ghost', icon: 'x', onClick: () => { hlState.tag = ''; location.hash = '#/alintilar'; } })) : null,
     el('div', { class: 'toolbar' }, el('div', { class: 'search' }, icon('search', { size: 18 }), search)),
     el('div', { class: 'toolbar' }, bookSel, sortSel, favBtn),
     countEl, list);

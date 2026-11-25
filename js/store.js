@@ -83,7 +83,7 @@ export async function saveHighlights(items) {
   const now = nowISO();
   const records = items.map(it => {
     const existing = it.id ? state.highlights.find(h => h.id === it.id) : null;
-    return db.makeHighlight({ ...existing, ...it, createdAt: existing?.createdAt || now, updatedAt: now }, now);
+    return db.makeHighlight({ ...existing, ...it, createdAt: existing?.createdAt || it.createdAt || now, updatedAt: now }, now);
   }).filter(h => h.text && h.bookId);
   if (!records.length) return [];
   const bookIds = [...new Set(records.map(r => r.bookId))];

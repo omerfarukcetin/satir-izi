@@ -2,11 +2,22 @@
 import { state, highlightsOf, notesOf } from './store.js';
 import { comparePage, compareTr, download, slugify, formatDate } from './utils.js';
 import { statusLabel, markLabel } from './database.js';
+import { relatedOf } from './links.js';
+import { bookById } from './store.js';
 
 const sortedHighlights = bookId => highlightsOf(bookId).sort((a, b) => comparePage(a.page, b.page) || a.createdAt.localeCompare(b.createdAt));
 const tagify = t => '#' + t.trim().replace(/\s+/g, '-').replace(/[#,]/g, '');
 // Markdown başlığında satır sonu olmasın
 const oneLine = s => String(s || '').replace(/\s+/g, ' ').trim();
+
+// Obsidian: ilgili kayıtlar kitap notuna [[Kitap adı]] bağlantısıyla gösterilir
+function relatedRefs(id) {
+  return relatedOf(id).map(r => {
+    const b = bookById(r.item.bookId);
+    const what = r.type === 'highlight' ? (r.item.page ? `s. ${r.item.page}` : 'alıntı') : 'not';
+    return b ? `[[${oneLine(b.title)}]] (${what})` : '';
+  }).filter(Boolean).join(', ');
+}
 
 export function bookToMarkdown(book) {
   const lines = [`# ${oneLine(book.title)}`, '', `Yazar: ${oneLine(book.author) || '—'}`];
@@ -20,7 +31,11 @@ export function bookToMarkdown(book) {
   const notes = notesOf(book.id).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   if (notes.length) {
     lines.push('## Kişisel notlar', '');
-    for (const n of notes) lines.push(n.text.trim(), '');
+    for (const n of notes) {
+      lines.push(n.text.trim(), '');
+      if (n.tags?.length) lines.push(`**Etiketler:** ${n.tags.map(tagify).join(' ')}`, '');
+      const rel = relatedRefs(n.id); if (rel) lines.push(`**İlgili:** ${rel}`, '');
+    }
   }
   let lastPage = null;
   for (const h of sortedHighlights(book.id)) {
@@ -29,6 +44,7 @@ export function bookToMarkdown(book) {
     lines.push(h.text.split('\n').map(l => '> ' + l).join('\n'), '');
     if (h.comment?.trim()) lines.push(`**Kişisel not:** ${h.comment.trim()}`, '');
     if (h.tags?.length) lines.push(`**Etiketler:** ${h.tags.map(tagify).join(' ')}`, '');
+    const rel = relatedRefs(h.id); if (rel) lines.push(`**İlgili:** ${rel}`, '');
   }
   return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
 }

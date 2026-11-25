@@ -11,6 +11,10 @@ import { extractBookInfo, hasApiKey } from './gemini.js';
 import { openHighlightEditor } from './highlights.js';
 import { exportBook } from './export.js';
 import { pendingCallout } from './review.js';
+import { tagInput } from './tags.js';
+import { renderRich, backlinksToBook, linkChip, wikiButton, relatedEditor, syncBacklinks } from './links.js';
+import { relatedBlock } from './ui.js';
+import { saveHighlights, findDuplicate } from './store.js';
 import { queuePages, pendingInbox } from './bridge.js';
 import { formatDate as fmtDay } from './utils.js';
 
@@ -103,9 +107,9 @@ function autoFillBox({ f, more, hasCover, setCover }) {
 }
 
 // ---------- Kitap formu ----------
-export function openBookForm(book = null) {
+export function openBookForm(book = null, { past = false } = {}) {
   return new Promise(resolve => {
-    const b = book || {};
+    const b = book || (past ? { status: 'tamamlandi' } : {});
     let coverData = b.cover || '';
     const f = {
       title: el('input', { required: true, maxlength: 300, value: b.title || '', autocomplete: 'off' }),
@@ -151,7 +155,7 @@ export function openBookForm(book = null) {
 
     const error = el('p', { class: 'form-error', role: 'alert', hidden: true });
     let result = null;
-    const more = el('details', { class: 'more-fields', open: !!book });
+    const more = el('details', { class: 'more-fields', open: !!book || past });
     const auto = autoFillBox({
       f, more,
       hasCover: () => !!coverData,
@@ -159,7 +163,8 @@ export function openBookForm(book = null) {
     });
     dlgAbort = auto.abort;
     const form = el('form', { class: 'form', novalidate: true },
-      el('h2', {}, book ? 'Kitabı düzenle' : 'Yeni kitap'),
+      el('h2', {}, book ? 'Kitabı düzenle' : past ? 'Okuduğum bir kitap' : 'Yeni kitap'),
+      past ? el('p', { class: 'muted small' }, 'Daha önce okuduğun kitabı ekle. Bitirme tarihini (bilmiyorsan yaklaşık ayın ilk gününü) girersen istatistiklerde o aya sayılır.') : null,
       book ? el('details', { class: 'autofill-wrap' }, el('summary', {}, 'Bilgileri otomatik doldur'), auto.root) : auto.root,
       field('Kitap adı *', f.title),
       field('Yazar *', f.author),
@@ -187,7 +192,8 @@ export function openBookForm(book = null) {
       const title = f.title.value.trim(), author = f.author.value.trim();
       if (!title || !author) { error.textContent = 'Kitap adı ve yazar zorunludur.'; error.hidden = false; (title ? f.author : f.title).focus(); return; }
       const total = f.totalPages.value === '' ? null : Number(f.totalPages.value);
-      const read = b.sefer ? (b.readPages ?? null) : (f.readPages.value === '' ? null : Number(f.readPages.value));
+      let read = b.sefer ? (b.readPages ?? null) : (f.readPages.value === '' ? null : Number(f.readPages.value));
+      if (f.status.value === 'tamamlandi' && read === null && total !== null) read = total; // bitmiş kitap: okunan = toplam
       if (total !== null && read !== null && read > total) { error.textContent = 'Okunan sayfa, toplam sayfadan büyük olamaz.'; error.hidden = false; return; }
       if (f.startDate.value && f.endDate.value && f.endDate.value < f.startDate.value) { error.textContent = 'Bitirme tarihi başlama tarihinden önce olamaz.'; error.hidden = false; return; }
       try {
@@ -207,6 +213,7 @@ export function openBookForm(book = null) {
     document.body.append(dlg);
     dlg.showModal();
     f.title.focus();
+    if (past) f.status.value = 'tamamlandi';
   });
 }
 
@@ -253,9 +260,17 @@ export function booksView() {
 
   draw();
   return el('section', {},
-    pageHeader('Kitaplarım', { actions: [button('Kitap ekle', { icon: 'plus', variant: 'primary', onClick: addBook })] }),
+    pageHeader('Kitaplarım', { actions: [
+      button('İstatistik', { icon: 'note', small: true, href: '#/istatistik' }),
+      button('Okuduğum bir kitap', { icon: 'check', small: true, onClick: addPastBook }),
+      button('Kitap ekle', { icon: 'plus', variant: 'primary', onClick: addBook })] }),
     el('div', { class: 'toolbar' }, el('div', { class: 'search' }, icon('search', { size: 18 }), search), sort),
     filters, list);
+}
+
+export async function addPastBook() {
+  const b = await openBookForm(null, { past: true });
+  if (b) { toast('Kitap eklendi. Alıntılarını “Toplu alıntı gir” ile ekleyebilirsin.'); navigate(`kitap/${encodeURIComponent(b.id)}`); }
 }
 
 export async function addBook() {
@@ -293,6 +308,7 @@ export function bookDetailView({ parts }) {
     button('Sayfa tara', { icon: 'camera', variant: 'primary', href: `#/tara?kitap=${encodeURIComponent(book.id)}` }),
     button('Toplu tara', { icon: 'scan', href: `#/toplu?kitap=${encodeURIComponent(book.id)}` }),
     button('Elle alıntı ekle', { icon: 'plus', onClick: async () => { if (await openHighlightEditor({ bookId: book.id })) refresh(); } }),
+    button('Toplu alıntı gir', { icon: 'quote', onClick: () => openBulkEntry(book) }),
     button('Not ekle', { icon: 'note', onClick: () => openNoteEditor(book.id) }),
     button('Dışa aktar', { icon: 'download', onClick: async () => {
       const f = await choiceDialog({ title: 'Dışa aktar', message: `${book.title} için biçim seçin.`, options: [
@@ -323,13 +339,21 @@ export function bookDetailView({ parts }) {
   const notesSection = notes.length ? el('section', {},
     el('h2', {}, 'Kişisel notlar'),
     notes.map(n => el('article', { class: 'note-card' },
-      el('p', { class: 'prewrap' }, n.text),
+      el('p', { class: 'prewrap' }, renderRich(n.text)),
+      n.tags?.length ? el('div', { class: 'tags' }, n.tags.map(t => el('a', { class: 'tag', href: `#/alintilar?etiket=${encodeURIComponent(t)}` }, '#' + t))) : null,
+      relatedBlock(n.id),
       el('div', { class: 'hl-actions' }, el('span', { class: 'muted small' }, formatDate(n.updatedAt, true)),
         el('div', { class: 'row-actions' },
           iconButton('edit', 'Notu düzenle', () => openNoteEditor(book.id, n)),
           iconButton('trash', 'Notu sil', async () => {
             if (await confirmDialog({ title: 'Not silinsin mi?', confirmLabel: 'Sil', danger: true })) { await deleteNote(n.id); refresh(); }
           })))))) : null;
+
+  const back = backlinksToBook(book.id);
+  const backSection = back.length ? el('section', {},
+    el('h2', {}, 'Bu kitaba bağlantı verenler'),
+    el('p', { class: 'muted small' }, 'Başka kitaplardaki notlarında [[' + book.title + ']] diye andığın yerler.'),
+    el('div', { class: 'link-list' }, back.map(r => linkChip(r)))) : null;
 
   const sortSel = select([{ value: 'page', label: 'Sayfaya göre' }, { value: 'new', label: 'Yeniden eskiye' }, { value: 'old', label: 'Eskiden yeniye' }], detailSort.by, { 'aria-label': 'Alıntı sıralaması' });
   sortSel.onchange = () => { detailSort.by = sortSel.value; refresh(); };
@@ -340,7 +364,7 @@ export function bookDetailView({ parts }) {
 
   return el('section', {},
     el('a', { class: 'back-link', href: '#/kitaplar' }, icon('back', { size: 18 }), 'Kitaplarım'),
-    info, seferBox, actions, draftBox, review, notesSection,
+    info, seferBox, actions, draftBox, review, notesSection, backSection,
     el('div', { class: 'section-head' }, el('h2', {}, `Alıntılar (${hls.length})`), hls.length > 1 ? sortSel : null),
     hls.length ? el('div', { class: 'hl-list' }, sorted.map(h => highlightCard(h, { onEdit: edit })))
       : emptyState('Henüz alıntı yok. Altını çizdiğin bir sayfanın fotoğrafını tara veya elle ekle.'));
@@ -396,17 +420,90 @@ function openReadDialog(book) {
 function fact(k, v) { return el('div', {}, el('dt', {}, k), el('dd', {}, v)); }
 
 export function openNoteEditor(bookId, note = null) {
-  const ta = el('textarea', { rows: 8, maxlength: 50000, placeholder: 'Bu kitapla ilgili düşüncelerin…' });
+  const ta = el('textarea', { rows: 8, maxlength: 50000, placeholder: 'Bu kitapla ilgili düşüncelerin… Başka kitaba [[Kitap adı]], konuya #etiket ile bağlanabilirsin.' });
   ta.value = note?.text || '';
-  const dlg = el('dialog', { class: 'dialog' },
+  const tags = tagInput(note?.tags || []);
+  const related = relatedEditor(note?.id);
+  const dlg = el('dialog', { class: 'dialog dialog-wide' },
     el('h2', {}, note ? 'Notu düzenle' : 'Kişisel not'),
     el('p', { class: 'muted' }, 'Kitaptan alıntı değil, kendi düşüncen. Alıntılardan ayrı saklanır.'),
     ta,
-    el('div', { class: 'row-actions end' },
+    el('div', { class: 'row-actions' }, wikiButton(ta)),
+    el('div', { class: 'field' }, el('span', { class: 'field-label' }, 'Etiketler'), tags.root),
+    el('div', { class: 'field' }, el('span', { class: 'field-label' }, 'İlgili alıntılar ve notlar'), related.root),
+    el('div', { class: 'row-actions end sticky-actions' },
       button('Vazgeç', { onClick: () => dlg.close() }),
       button('Kaydet', { variant: 'primary', icon: 'check', onClick: async () => {
-        try { await saveNote({ id: note?.id, bookId, text: ta.value }); dlg.close(); toast('Not kaydedildi.'); refresh(); }
-        catch (e) { toast(e.message, { type: 'error' }); }
+        try {
+          const saved = await saveNote({ id: note?.id, bookId, text: ta.value, tags: tags.get(), links: related.get() });
+          await syncBacklinks(saved.id, related.get(), { highlight: saveHighlights, note: saveNote });
+          dlg.close(); toast('Not kaydedildi.'); refresh();
+        } catch (e) { toast(e.message, { type: 'error' }); }
+      } })));
+  dlg.addEventListener('close', () => dlg.remove());
+  document.body.append(dlg);
+  dlg.showModal();
+  ta.focus();
+}
+
+// ---------- Toplu elle alıntı girişi (eski kitaplar için) ----------
+const QUOTES = /^[“"«„']+|[”"»']+$/g;
+/** Yapıştırılan metni alıntılara böler; "s. 42", "42:", "(s. 42)" gibi sayfa işaretlerini ayırır. */
+export function parseBulk(text, { perLine = false } = {}) {
+  const blocks = String(text || '').replace(/\r\n?/g, '\n').split(perLine ? /\n+/ : /\n\s*\n/).map(b => b.trim()).filter(Boolean);
+  return blocks.map(b => {
+    let page = '', t = b;
+    let m = t.match(/^\s*(?:s\.?|sf\.?|sayfa)\s*(\d{1,5})\s*[:\-–—.)]?\s+/i) || t.match(/^\s*(\d{1,5})\s*[:–—-]\s+/);
+    if (m) { page = m[1]; t = t.slice(m[0].length); }
+    else if ((m = t.match(/\s*\(\s*(?:s\.?|sf\.?|sayfa)\s*(\d{1,5})\s*\)\s*$/i) || t.match(/\s+[-–—]\s*(?:s\.?|sf\.?|sayfa)\s*(\d{1,5})\s*$/i))) { page = m[1]; t = t.slice(0, m.index); }
+    t = t.trim().replace(QUOTES, '').trim();
+    return { text: t, page };
+  }).filter(x => x.text);
+}
+
+export function openBulkEntry(book) {
+  const ta = el('textarea', { rows: 12, placeholder: 's. 42 İnsan, okuduğu kitapların toplamıdır.\n\ns. 57 Bir başka alıntı…\n\nSayfa numarası yazmazsan boş kalır.' });
+  const perLine = el('input', { type: 'checkbox' });
+  const count = el('p', { class: 'muted small' }, 'Henüz alıntı yok.');
+  const today = new Date().toISOString().slice(0, 10);
+  const defDate = book.status === 'tamamlandi' && book.endDate ? book.endDate : today;
+  const date = el('input', { type: 'date', value: defDate, max: today });
+  const tags = tagInput([]);
+  const upd = () => {
+    const items = parseBulk(ta.value, { perLine: perLine.checked });
+    const pages = items.filter(i => i.page).length;
+    count.textContent = items.length ? `${items.length} alıntı bulundu${pages ? `, ${pages} tanesinde sayfa numarası var` : ''}.` : 'Henüz alıntı yok.';
+  };
+  ta.oninput = upd; perLine.onchange = upd;
+  const dlg = el('dialog', { class: 'dialog dialog-wide' },
+    el('h2', {}, 'Toplu alıntı gir'),
+    el('p', { class: 'muted' }, `${book.title} · Alıntıları yapıştır veya yaz; her alıntıyı boş bir satırla ayır. Başına “s. 42” ya da “42:”, sonuna “(s. 42)” yazarsan sayfa numarası ayrılır.`),
+    ta,
+    el('label', { class: 'check' }, perLine, el('span', {}, 'Her satır ayrı bir alıntı')),
+    count,
+    el('div', { class: 'grid-2' },
+      field('Eklenme tarihi', date, book.endDate ? 'Varsayılan: kitabı bitirdiğin tarih. İstatistikler bu tarihe göre sayar.' : 'İstatistiklerde bu tarihe sayılır.'),
+      el('div', { class: 'field' }, el('span', { class: 'field-label' }, 'Hepsine etiket'), tags.root)),
+    el('div', { class: 'row-actions end sticky-actions' },
+      button('Vazgeç', { onClick: () => dlg.close() }),
+      button('Kaydet', { variant: 'primary', icon: 'check', onClick: async () => {
+        let items = parseBulk(ta.value, { perLine: perLine.checked });
+        if (!items.length) { toast('Kaydedilecek alıntı yok.'); return; }
+        const dups = items.filter(i => findDuplicate(book.id, i.text));
+        if (dups.length) {
+          const c = await choiceDialog({ title: 'Mükerrer alıntı', message: `${dups.length} alıntı bu kitapta zaten kayıtlı.`, options: [
+            { value: 'skip', label: 'Tekrarları atla', description: `${items.length - dups.length} yeni alıntı kaydedilir` },
+            { value: 'all', label: 'Hepsini kaydet' }] });
+          if (!c) return;
+          if (c === 'skip') items = items.filter(i => !dups.includes(i));
+        }
+        const d = date.value || today;
+        const createdAt = new Date(`${d}T12:00:00`).toISOString();
+        const t = tags.get();
+        const saved = await saveHighlights(items.map(i => ({ bookId: book.id, text: i.text, page: i.page, markType: 'manuel', source: 'manuel', tags: t, createdAt })));
+        dlg.close();
+        toast(`${saved.length} alıntı kaydedildi.`);
+        refresh();
       } })));
   dlg.addEventListener('close', () => dlg.remove());
   document.body.append(dlg);
