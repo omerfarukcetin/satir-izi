@@ -5,6 +5,7 @@ import { getSetting, setSetting, DEFAULT_MODEL, MARK_TYPES } from './database.js
 
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const KEY_STORAGE = 'satir-key'; // v1 ile aynı anahtar adı: hatırlanan anahtar güncellemede kaybolmaz
+const KEY_TIME = 'satir-key-at';  // anahtarın son değişme zamanı (hesap eşitlemesi için; anahtarın kendisi değil)
 const REQUEST_TIMEOUT_MS = 120000;
 
 let sessionKey = '';
@@ -14,13 +15,22 @@ export const getApiKey = () => sessionKey;
 export const hasApiKey = () => !!sessionKey;
 export const isKeyRemembered = () => { try { return localStorage.getItem(KEY_STORAGE) !== null; } catch { return false; } };
 
-export function setApiKey(key, remember) {
-  sessionKey = String(key || '').trim();
+const keyListeners = new Set();
+export const onKeyChange = fn => { keyListeners.add(fn); return () => keyListeners.delete(fn); };
+
+/** at: değişiklik zamanı (ms). Eşitlemeden gelen anahtar kendi zamanıyla yazılır ve tekrar bildirilmez. */
+export function setApiKey(key, remember, { at = Date.now(), silent = false } = {}) {
+  const next = String(key || '').trim();
+  const changed = next !== sessionKey;
+  sessionKey = next;
   try {
     if (remember && sessionKey) localStorage.setItem(KEY_STORAGE, sessionKey);
     else localStorage.removeItem(KEY_STORAGE);
+    if (changed || silent) localStorage.setItem(KEY_TIME, String(at));
   } catch { /* depolama kapalı olabilir */ }
+  if (changed && !silent) keyListeners.forEach(fn => fn());
 }
+export const getKeyUpdatedAt = () => { try { return Number(localStorage.getItem(KEY_TIME)) || 0; } catch { return 0; } };
 
 export const getModel = () => getSetting('model', DEFAULT_MODEL);
 export function validateModelId(model) {

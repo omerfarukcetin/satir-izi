@@ -232,7 +232,29 @@ export async function getSetting(key, fallback = null) {
   const row = await get('settings', key);
   return row === undefined ? fallback : row.value;
 }
-export const setSetting = (key, value) => put('settings', { key, value });
+// Hesap eşitlemesine giren ayarlar ve yerel değişiklik bildirimi (sync.js dinler)
+export const SYNCED_SETTINGS = ['model', 'theme', 'fontSize', 'scanQuality', 'batchDelaySec'];
+const changeListeners = new Set();
+export const onLocalChange = fn => { changeListeners.add(fn); return () => changeListeners.delete(fn); };
+export const notifyLocalChange = () => changeListeners.forEach(fn => { try { fn(); } catch (e) { console.error(e); } });
+
+export async function setSetting(key, value) {
+  if (!SYNCED_SETTINGS.includes(key)) return put('settings', { key, value });
+  await runTx(['settings'], 'readwrite', tx => {
+    tx.objectStore('settings').put({ key, value });
+    tx.objectStore('settings').put({ key: 'settingsUpdatedAt', value: Date.now() });
+  });
+  notifyLocalChange();
+}
+
+/** Silinen kayıtların izini tut (diğer cihazlar da silsin). */
+export async function addTombstones(ids) {
+  if (!ids.length) return;
+  const t = (await getSetting('tombstones', {})) || {};
+  const now = nowISO();
+  ids.forEach(id => { t[id] = now; });
+  await put('settings', { key: 'tombstones', value: t });
+}
 
 /** Kalıcı depolama izni iste (tarayıcının veriyi kendiliğinden silmesini zorlaştırır). */
 export async function requestPersistence() {

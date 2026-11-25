@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v2.1.0)
+## Özellikler (v2.2.0)
 
 - **Kitaplar:** ad ve yazar zorunlu; yayınevi, kapak, ISBN, kategori, sayfa sayıları, tarihler, okuma durumu
   (Okunacak / Okunuyor / Tamamlandı / Yarım bırakıldı), puan ve kişisel değerlendirme isteğe bağlı.
@@ -36,6 +36,11 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
   (destekleyen tarayıcılarda ekranın kapanması engellenir).
 - **Alıntılarım:** tüm kitaplarda Türkçe büyük/küçük harf duyarlı arama, kitap ve favori filtresi,
   kişisel not ve etiketler, panoya kopyalama.
+- **Hesap ve eşitleme (isteğe bağlı):** Emanet ve SEFER ile aynı Supabase projesi ve aynı hesapla e-posta/şifre girişi.
+  Kitaplar, alıntılar, notlar, eşitlenen ayarlar (model, tema, yazı boyutu, tarama ayarları) ve Gemini API anahtarı
+  bütün cihazlarda eşitlenir. Eşitleme **kayıt düzeyindedir**: iki cihazda ayrı ayrı eklenen alıntıların ikisi de korunur,
+  aynı kayıt iki yerde değiştiyse yeni olan kazanır, silinenler diğer cihazlardan da silinir. Her günün son hâli
+  30 gün boyunca otomatik bulut yedeği olarak saklanır (API anahtarı hariç). Giriş yapmadan kullanım aynen sürer.
 - **Ana sayfa:** kitap / okunan / tamamlanan / alıntı / not sayıları, okunmakta olan kitaplar, son alıntılar,
   rastgele eski bir alıntı, bekleyen taramalar, yedek hatırlatması.
 - **Ayarlar:** Gemini anahtarı ve model kimliği, bağlantı testi, tarama çözünürlüğü, açık/koyu tema,
@@ -69,13 +74,30 @@ Kota dolduğunda uygulama ücretli bir modele veya ücretli kullanıma kendiliğ
 - Sayfada uzun bir bölüm işaretliyse Gemini bazen telif koruması nedeniyle aktarmayı durdurur. Böyle olursa
   fotoğrafı yalnızca işaretli bölümü kapsayacak şekilde kırp veya alıntıyı elle ekle.
 
+## Hesap kurulumu (bir kez)
+
+Satır İzi, Emanet ve SEFER'in kullandığı Supabase projesini kullanır (`js/config.js`). Bu projede yalnızca iki ayar yapılır:
+
+1. **Tabloları oluştur:** Supabase paneli → **SQL Editor** → New query → `supabase/satir-izi.sql` dosyasının tamamını
+   yapıştırıp **Run**. (Birden çok kez çalıştırılabilir; Emanet/SEFER tablolarına dokunmaz.)
+2. **Yönlendirme adresini ekle:** Authentication → **URL Configuration** → Redirect URLs listesine
+   `https://omerfarukcetin.github.io/satir-izi/` ekle. Hesap onay ve şifre yenileme e-postalarındaki bağlantılar
+   bu sayede Satır İzi'ye döner.
+
+Bu iki adım yapılmadan giriş çalışır ama eşitleme “Bulut tablosu henüz kurulmamış” uyarısı verir.
+
 ## Veri, gizlilik ve güvenlik
 
-- Kitaplar, alıntılar ve notlar yalnızca bu tarayıcının **IndexedDB** deposunda tutulur. Cihazlar arasında eşitleme yoktur.
+- Giriş yapılmazsa kitaplar, alıntılar ve notlar yalnızca bu tarayıcının **IndexedDB** deposunda tutulur.
+- Giriş yapılırsa aynı veriler, eşitlenen ayarlar ve Gemini API anahtarı Supabase'de `satir_izi_state` tablosunda,
+  hesaba özel tek satırda saklanır. Satır güvenliği (RLS) sayesinde yalnızca hesap sahibi okuyup yazabilir.
+  Taslaklar, toplu tarama fotoğrafları ve cihaz tercihleri buluta gitmez.
+- Çıkış yaparken “Bu cihazdan sil” seçilirse arşiv ve API anahtarı o cihazdan temizlenir (ortak cihazlar için).
 - Uygulama tarayıcıdan **kalıcı depolama** izni ister. İzin verilirse tarayıcı yer darlığında verini kendiliğinden silmez.
   Yine de **düzenli JSON yedeği al**. Uygulama 14 günde bir yedek hatırlatması gösterir.
 - **API anahtarı** varsayılan olarak yalnızca oturum boyunca bellekte tutulur. “Bu cihazda hatırla” seçilirse
-  tarayıcının yerel deposuna şifrelenmeden yazılır. Anahtar hiçbir yedeğe, dışa aktarma dosyasına veya
+  tarayıcının yerel deposuna şifrelenmeden yazılır. Hesapla giriş yapıldıysa anahtar hesaba da kaydedilir ve diğer
+  cihazlara gelir. Anahtar hiçbir JSON yedeğine, otomatik bulut yedeğine, dışa aktarma dosyasına veya
   Service Worker önbelleğine girmez, loglanmaz.
 - Tarama sırasında yalnızca o sayfanın fotoğrafı, senin anahtarınla doğrudan Google Gemini API'ye gönderilir.
   **Ücretsiz katmanda Google gönderilen içeriği ürünlerini geliştirmek için kullanabilir.** Hassas sayfaları tarama.
@@ -106,11 +128,16 @@ satir-izi/
 ├── manifest.webmanifest
 ├── sw.js                   Service Worker (sürümlü önbellek)
 ├── .nojekyll
+├── supabase/satir-izi.sql  Bulut tabloları (RLS ile)
 ├── fonts/                  Plus Jakarta Sans (gömülü, diğer projelerle aynı)
 ├── assets/icons/           192, 512, maskable, apple-touch
 ├── css/style.css
 └── js/
     ├── app.js              Başlatma, navigasyon, SW kaydı ve güncelleme bildirimi
+    ├── config.js           Supabase adresi ve herkese açık anahtar
+    ├── sync.js             Giriş, kayıt düzeyinde eşitleme, bulut yedeği
+    ├── account.js          Hesap arayüzü (giriş, çıkış, bulut yedekleri)
+    ├── vendor/supabase.js  supabase-js 2.45.4 (Emanet ile aynı dosya)
     ├── router.js           Hash yönlendirici (#/kitaplar, #/kitap/:id, #/tara, #/onay/:id …)
     ├── database.js         IndexedDB, şema, v1 → v2 migrasyonu, kayıt fabrikaları
     ├── store.js            Bellekteki durum ve veri değiştiren işlemler
@@ -153,6 +180,12 @@ Kayıt kimlikleri korunur. Eski depo güvenlik için silinmeden bırakılır. Es
 `gemini-3.5-flash-lite` modeline geçirilir; özel model seçimi korunur.
 
 ## Sürüm geçmişi
+
+### 2.2.0
+- Hesap ve eşitleme: Emanet/SEFER ile aynı Supabase hesabıyla giriş, kayıt düzeyinde birleştirme, silme izleri,
+  ayarların ve Gemini API anahtarının eşitlenmesi, günlük otomatik bulut yedeği ve geri yükleme.
+- Çıkış yaparken verileri cihazda bırakma veya silme seçeneği; hesap değişiminde onay.
+- JSON geri yükleme ve “Tüm verileri sil” giriş yapılmışken buluta da doğru yansıyor.
 
 ### 2.1.0
 - Toplu fotoğraf tarama: çoklu seçim, sıralama, döndürme/kırpma, sıralı kuyruk, bekleme süresi, ilerleme ekranı,

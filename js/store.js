@@ -28,12 +28,15 @@ function upsert(list, item) {
 }
 
 // ---- Kitaplar ----
+const changed = () => db.notifyLocalChange();
+
 export async function saveBook(input) {
   const existing = input.id ? bookById(input.id) : null;
   const book = db.makeBook({ ...existing, ...input, createdAt: existing?.createdAt, updatedAt: nowISO() });
   if (!book.title || !book.author) throw new Error('Kitap adı ve yazar zorunludur.');
   await db.put('books', book);
   upsert(state.books, book);
+  changed();
   return book;
 }
 
@@ -55,6 +58,8 @@ export async function deleteBook(bookId) {
   state.notes = state.notes.filter(n => n.bookId !== bookId);
   state.drafts = state.drafts.filter(d => d.bookId !== bookId);
   state.jobs = state.jobs.filter(j => j.bookId !== bookId);
+  await db.addTombstones([bookId, ...hIds, ...nIds]);
+  changed();
 }
 
 function touchBook(bookId, tx) {
@@ -87,12 +92,15 @@ export async function saveHighlights(items) {
     bookIds.forEach(id => touchBook(id, tx));
   });
   records.forEach(r => upsert(state.highlights, r));
+  changed();
   return records;
 }
 
 export async function deleteHighlight(id) {
   await db.del('highlights', id);
   state.highlights = state.highlights.filter(h => h.id !== id);
+  await db.addTombstones([id]);
+  changed();
 }
 
 export async function toggleFavorite(id) {
@@ -101,6 +109,7 @@ export async function toggleFavorite(id) {
   const updated = { ...h, favorite: !h.favorite, updatedAt: nowISO() };
   await db.put('highlights', updated);
   upsert(state.highlights, updated);
+  changed();
   return updated;
 }
 
@@ -111,11 +120,14 @@ export async function saveNote(input) {
   if (!note.text.trim()) throw new Error('Not boş olamaz.');
   await db.put('notes', note);
   upsert(state.notes, note);
+  changed();
   return note;
 }
 export async function deleteNote(id) {
   await db.del('notes', id);
   state.notes = state.notes.filter(n => n.id !== id);
+  await db.addTombstones([id]);
+  changed();
 }
 
 // ---- Tarama taslakları ----

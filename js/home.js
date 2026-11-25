@@ -7,6 +7,7 @@ import { button, bookCard, highlightCard, emptyState } from './ui.js';
 import { addBook } from './books.js';
 import { openHighlightEditor } from './highlights.js';
 import { pendingCallout } from './review.js';
+import { loginSuggestion } from './account.js';
 import { downloadBackup } from './backup.js';
 import { refresh } from './router.js';
 
@@ -66,7 +67,7 @@ export async function homeView() {
   drawRandom();
 
   return el('section', { class: 'home' },
-    hero, pendingCallout(), reminder, stats,
+    hero, pendingCallout(), await loginSuggestion(), reminder, stats,
     reading.length ? el('div', {},
       el('div', { class: 'section-head' }, el('h2', {}, 'Okumakta olduklarım'), el('a', { href: '#/kitaplar' }, 'Tümü')),
       el('div', { class: 'book-list compact' }, reading.slice(0, 4).map(b => bookCard(b, counts.get(b.id) || 0)))) : null,

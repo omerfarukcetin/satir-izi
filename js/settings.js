@@ -8,6 +8,8 @@ import { button, pageHeader, field, select } from './ui.js';
 import { getApiKey, setApiKey, isKeyRemembered, getModel, setModel, testConnection, validateModelId } from './gemini.js';
 import { downloadBackup, parseBackup, applyRestore } from './backup.js';
 import { exportAll } from './export.js';
+import { accountCard } from './account.js';
+import * as sync from './sync.js';
 
 // ---- Tema ve yazı boyutu ----
 export async function applyAppearance() {
@@ -69,6 +71,7 @@ export async function settingsView() {
       el('a', { href: 'https://aistudio.google.com/apikey', target: '_blank', rel: 'noopener noreferrer' }, 'Google AI Studio'),
       '’dan ücretsiz alınır. Ücretsiz kotada kalmak için faturalandırması açık olmayan bir proje kullan. Uygulama kendiliğinden ücretli kullanıma geçmez.'),
     el('label', { class: 'check' }, remember, el('span', {}, 'Anahtarı bu cihazda hatırla')),
+    sync.currentUser() ? el('p', { class: 'field-hint' }, 'Hesabınla giriş yaptığın için anahtar hesabına kaydedilir ve diğer cihazlarında kendiliğinden gelir.') : null,
     el('p', { class: 'field-hint warn' }, 'Varsayılan olarak anahtar yalnızca bu oturum boyunca bellekte tutulur; sayfa kapanınca silinir. “Hatırla” seçilirse tarayıcının yerel deposuna şifrelenmeden yazılır; bu cihaza erişen biri veya tarayıcıda çalışan zararlı bir eklenti anahtarı okuyabilir. Ortak kullanılan cihazlarda işaretleme. Anahtar hiçbir yedeğe veya dışa aktarma dosyasına eklenmez.'),
     field('Model kimliği', modelInput, `Varsayılan: ${DEFAULT_MODEL}. Google model adlarını değiştirirse buradan güncelleyebilirsin.`),
     el('div', { class: 'row-actions' }, button('Kaydet', { variant: 'primary', onClick: saveGemini }), testBtn,
@@ -113,6 +116,7 @@ export async function settingsView() {
         if (state.books.length || state.highlights.length) await downloadBackup('satir-izi-geri-yukleme-oncesi');
       }
       const r = await applyRestore(data, mode);
+      if (sync.currentUser()) await sync.syncNow({ authoritative: mode === 'overwrite' });
       toast(`Geri yükleme tamamlandı: ${r.books} kitap, ${r.highlights} alıntı, ${r.notes} not${r.skipped ? `, ${r.skipped} tekrar atlandı` : ''}.`, { duration: 8000 });
       refresh();
     } catch (e) {
@@ -166,11 +170,12 @@ export async function settingsView() {
   // --- Gizlilik ---
   const privacy = card('Gizlilik',
     el('ul', { class: 'plain-list' },
-      el('li', {}, 'Kitapların, alıntıların ve notların yalnızca bu cihazda, tarayıcının IndexedDB deposunda tutulur. Satır İzi’nin bir sunucusu yoktur.'),
+      el('li', {}, 'Giriş yapmazsan kitapların, alıntıların ve notların yalnızca bu cihazda, tarayıcının IndexedDB deposunda tutulur.'),
+      el('li', {}, 'Giriş yaparsan aynı veriler, ayarların ve Gemini API anahtarın hesabına özel olarak Supabase’de (Emanet ve SEFER ile aynı proje) saklanır; satır güvenliği sayesinde yalnızca senin hesabın okuyabilir. Taslaklar ve tarama fotoğrafları buluta gitmez.'),
       el('li', {}, 'Tarama yaptığında yalnızca o sayfanın fotoğrafı, senin API anahtarınla doğrudan Google Gemini API’ye gönderilir.'),
       el('li', {}, 'Gemini’nin ücretsiz katmanında Google, gönderilen içerikleri ürünlerini geliştirmek için kullanabilir ve insan incelemesinden geçirebilir. Kişisel veya hassas içerik barındıran sayfaları tarama.'),
       el('li', {}, 'Fotoğraflar kalıcı arşivde saklanmaz; onay ekranında kaydettiğinde veya taslağı sildiğinde geçici fotoğraf da silinir.'),
-      el('li', {}, 'API anahtarın yedeklere, dışa aktarma dosyalarına ve uygulama önbelleğine hiçbir zaman eklenmez.')),
+      el('li', {}, 'API anahtarın JSON yedeklerine, otomatik bulut yedeklerine, dışa aktarma dosyalarına ve uygulama önbelleğine hiçbir zaman eklenmez.')),
     el('p', {}, el('a', { href: 'https://ai.google.dev/gemini-api/terms', target: '_blank', rel: 'noopener noreferrer' }, 'Gemini API kullanım koşulları')));
 
   // --- Tehlikeli bölge ---
@@ -178,10 +183,21 @@ export async function settingsView() {
     el('p', {}, 'Bu cihazdaki bütün kitaplar, alıntılar, notlar, taslaklar ve ayarlar silinir. Geri alınamaz.'),
     button('Tüm verileri sil', { variant: 'danger', icon: 'trash', onClick: async () => {
       if (!await confirmDialog({ title: 'Emin misin?', message: `${state.books.length} kitap ve ${state.highlights.length} alıntı kalıcı olarak silinecek. Önce yedek almanı öneririz.`, confirmLabel: 'Evet, devam et', danger: true })) return;
+      let cloud = false;
+      if (sync.currentUser()) {
+        const c = await choiceDialog({ title: 'Buluttaki veriler', message: 'Hesabınla giriş yapmışsın. Bulut ne olsun?', options: [
+          { value: 'local', label: 'Yalnızca bu cihazdan sil', description: 'Çıkış yapılır; bulut ve diğer cihazların etkilenmez.' },
+          { value: 'cloud', label: 'Buluttan ve bütün cihazlardan sil', description: 'Hesabındaki arşiv de boşaltılır. Son 30 günün otomatik bulut yedekleri kalır.', danger: true },
+        ] });
+        if (!c) return;
+        cloud = c === 'cloud';
+      }
       if (!await confirmDialog({ title: 'Son onay', message: 'Bu işlem geri alınamaz.', confirmLabel: 'Hepsini sil', danger: true, requireText: 'SİL' })) return;
+      if (sync.currentUser() && !cloud) await sync.signOut({ wipeLocal: true });
       await wipeAll();
       setApiKey('', false);
       await loadState();
+      if (cloud) await sync.syncNow({ authoritative: true });
       await applyAppearance();
       toast('Bütün veriler silindi.');
       location.hash = '#/';
@@ -189,6 +205,7 @@ export async function settingsView() {
 
   return el('section', { class: 'settings' },
     pageHeader('Ayarlar'),
+    await accountCard(),
     gemini, scan, appearance, backup, storage, install, privacy, danger,
     el('p', { class: 'muted small center' }, `Satır İzi v${APP_VERSION} · Okudukların kaybolmasın.`));
 }

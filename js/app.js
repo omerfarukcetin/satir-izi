@@ -12,6 +12,8 @@ import { batchView } from './batch.js';
 import { recoverJobs } from './batch-runner.js';
 import { scanView } from './scan.js';
 import { settingsView, applyAppearance } from './settings.js';
+import { initSync, onSyncChange, onRemoteApplied } from './sync.js';
+import { wireSync } from './account.js';
 
 const NAV = [
   { key: 'home', href: '#/', label: 'Ana Sayfa', icon: 'home' },
@@ -104,6 +106,19 @@ async function init() {
   router.register('ayarlar', settingsView, 'settings');
   router.setup($('#view'), markNav);
   await router.refresh({ keepScroll: false });
+
+  // Hesap ve eşitleme (giriş yapılmamışsa yalnızca yerel çalışır)
+  wireSync();
+  onRemoteApplied(async () => { await applyAppearance(); router.refresh(); });
+  let lastSyncState = '';
+  onSyncChange(st => {
+    const route = router.parse().parts[0] || '';
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName || '');
+    const relevant = route === 'ayarlar' || (route === '' && st.state !== lastSyncState && st.state !== 'syncing');
+    lastSyncState = st.state;
+    if (relevant && !typing && !document.querySelector('dialog[open]')) router.refresh();
+  });
+  initSync().catch(e => console.warn('Eşitleme başlatılamadı', e));
 
   // Veri yazıldıktan sonra kalıcı depolama iste (Chrome kurulu PWA'da sessizce verir)
   requestPersistence();
