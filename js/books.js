@@ -7,7 +7,7 @@ import { navigate, refresh } from './router.js';
 import { button, iconButton, pageHeader, emptyState, cover, bookCard, progressBar, statusChip, highlightCard, field, select } from './ui.js';
 import { fileToCover } from './scanner.js';
 import { lookupIsbn, normalizeIsbn, photoForReading } from './bookinfo.js';
-import { extractBookInfo, hasApiKey } from './gemini.js';
+import { extractBookInfo, extractBookFromUrl, hasApiKey } from './gemini.js';
 import { openHighlightEditor } from './highlights.js';
 import { exportBook } from './export.js';
 import { pendingCallout } from './review.js';
@@ -32,13 +32,17 @@ function autoFillBox({ f, more, hasCover, setCover }) {
   const camBtn = button('Kapağın fotoğrafını çek', { icon: 'camera', small: true, variant: 'primary', disabled: !online || !key, onClick: () => cam.click() });
   const galBtn = button('Fotoğraf seç', { icon: 'image', small: true, disabled: !online || !key, onClick: () => gal.click() });
   const findBtn = button('Bul', { icon: 'search', small: true, disabled: !online, onClick: () => byIsbn(isbnIn.value) });
+  const urlIn = el('input', { type: 'url', inputmode: 'url', placeholder: 'Kitap bağlantısı (1000kitap, Kitapyurdu, D&R…)', 'aria-label': 'Kitap bağlantısı' });
+  const urlBtn = button('Getir', { icon: 'download', small: true, disabled: !online || !key, onClick: () => byUrl(urlIn.value) });
+  urlIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); byUrl(urlIn.value); } });
+  urlIn.addEventListener('paste', () => setTimeout(() => { if (/^https?:\/\//.test(urlIn.value.trim()) && !urlBtn.disabled) byUrl(urlIn.value); }, 0));
   isbnIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); byIsbn(isbnIn.value); } });
 
   const say = (text, kind = '') => {
     status.replaceChildren(...[kind === 'busy' ? el('span', { class: 'spinner spinner-sm', 'aria-hidden': 'true' }) : null, text].filter(Boolean));
     status.dataset.kind = kind;
   };
-  const busy = on => { [camBtn, galBtn, findBtn, isbnIn].forEach(b => { b.disabled = on || (b !== findBtn && b !== isbnIn && (!online || !key)) || (!online); }); };
+  const busy = on => { [camBtn, galBtn, findBtn, isbnIn, urlBtn, urlIn].forEach(b => { b.disabled = on || (b !== findBtn && b !== isbnIn && (!online || !key)) || (!online); }); };
 
   /** Yalnızca boş alanları doldurur; doldurulanların adlarını döner. */
   const apply = info => {
@@ -93,16 +97,36 @@ function autoFillBox({ f, more, hasCover, setCover }) {
       if (e.code !== 'aborted') say(e.full || e.message || 'Okunamadı.', 'error');
     } finally { busy(false); }
   }
+  async function byUrl(raw) {
+    if (!raw.trim()) { say('Önce bir bağlantı yapıştır.', 'warn'); return; }
+    ctrl?.abort(); ctrl = new AbortController(); busy(true);
+    say('Bağlantı okunuyor… (10–30 saniye sürebilir)', 'busy');
+    try {
+      const info = await extractBookFromUrl({ url: raw, signal: ctrl.signal });
+      if (!info.title && !info.author && !info.isbn) {
+        say(info.pageOpened ? 'Sayfa açıldı ama kitap bilgisi bulunamadı.' : 'Sayfa açılamadı ve aramada da kitap bulunamadı. Kapağın fotoğrafını veya ISBN’i dene.', 'warn');
+        return;
+      }
+      const filled = apply(info);
+      const how = info.pageOpened || info.via === 'sayfa' ? 'sayfadan okundu' : 'sayfa açılamadı, Google aramasıyla bulundu — kontrol etmeni öneririm';
+      if (normalizeIsbn(info.isbn)) { busy(false); await byIsbn(info.isbn, { quiet: true, prefix: filled }); say(`${status.textContent} (${how})`, 'ok'); return; }
+      say(`Doldurulan: ${filled.join(', ') || 'yok'} (${how}). Kontrol edip kaydet.`, info.pageOpened ? 'ok' : 'warn');
+    } catch (e) {
+      if (e.code !== 'aborted') say(e.full || e.message || 'Bağlantı okunamadı.', 'error');
+    } finally { busy(false); }
+  }
+
   for (const inp of [cam, gal]) inp.onchange = () => { const files = [...inp.files]; inp.value = ''; byPhoto(files); };
 
   const root = el('div', { class: 'autofill' },
     el('p', { class: 'autofill-title' }, icon('scan', { size: 18 }), el('strong', {}, 'Otomatik doldur')),
     el('div', { class: 'row-actions' }, camBtn, galBtn),
     el('div', { class: 'isbn-row' }, isbnIn, findBtn),
+    el('div', { class: 'isbn-row' }, urlIn, urlBtn),
     status, cam, gal,
     el('p', { class: 'muted small' }, !online ? 'Otomatik doldurma için internet gerekiyor.'
       : !key ? 'Fotoğrafla doldurmak için Ayarlar’dan Gemini anahtarını gir. ISBN ile arama anahtarsız çalışır.'
-        : 'İpucu: ön kapakla birlikte arka kapağı (barkod) da seçersen ISBN ve yayınevi de okunur. Fotoğraf yalnızca okumak için Gemini’ye gönderilir; kapak olarak kullanılmaz ve saklanmaz.'));
+        : 'İpucu: ön kapakla birlikte arka kapağı (barkod) da seçersen ISBN ve yayınevi de okunur. Fotoğraf yalnızca okumak için Gemini’ye gönderilir; kapak olarak kullanılmaz ve saklanmaz. Bağlantı da Gemini’ye gönderilir; sayfa açılamazsa kitap adıyla Google’da aranır.'));
   return { root, abort: () => ctrl?.abort() };
 }
 

@@ -12,11 +12,13 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v2.7.0)
+## Özellikler (v2.8.0)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
   Çekilen fotoğraf kapak olarak kullanılmaz ve saklanmaz; yalnızca boş alanlar doldurulur.
+  Kitap bağlantısı (1000kitap, Kitapyurdu, D&R, İdefix, Amazon…) yapıştırılırsa Gemini sayfayı okur (URL bağlamı);
+  sayfa açılamazsa bağlantıdaki adla Google’da arar ve bunu ekranda belirtir.
 - **Kitaplar:** ad ve yazar zorunlu; yayınevi, kapak, ISBN, kategori, sayfa sayıları, tarihler, okuma durumu
   (Okunacak / Okunuyor / Tamamlandı / Yarım bırakıldı), puan ve kişisel değerlendirme isteğe bağlı.
   Arama, duruma göre filtreleme, sıralama, onaylı silme.
@@ -212,6 +214,9 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 2.8.0
+- Kitap bağlantısından otomatik doldurma (Gemini URL bağlamı, gerekirse Google araması; ISBN bulunursa katalogla tamamlanır).
 
 ### 2.7.0
 - Etiket yönetimi (yeniden adlandır, birleştir, sil) ve yapay zekâ ile etiket önerisi (tekli ve toplu).
