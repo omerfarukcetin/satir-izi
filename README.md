@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v2.6.0)
+## Özellikler (v2.7.0)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -56,6 +56,10 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 - **Etiketler ve bağlantılar (Obsidian tarzı):** alıntılara ve notlara etiket; notlarda `#etiket` ve `[[Kitap adı]]`;
   alıntılar/notlar arası iki yönlü “ilgili” bağlantısı; kitapta “Bu kitaba bağlantı verenler”; Etiketler sayfası;
   Markdown dışa aktarımında `[[...]]` ve `#etiket` korunur.
+- **Etiket yönetimi:** Etiketler sayfasında yeniden adlandırma, birleştirme ve silme (metin içindeki #etiketler de güncellenir;
+  büyük/küçük harf, tire ve boşluk farkı aynı etiket sayılır).
+- **Yapay zekâ ile etiket önerisi:** alıntı düzenlerken “Etiket öner”; Etiketler sayfasında etiketsiz alıntılar 20’şerli
+  tek istekte incelenir. Mevcut etiketler önceliklidir; öneriler onaylanmadan kaydedilmez.
 - **Ana sayfa:** kitap / okunan / tamamlanan / alıntı / not sayıları, okunmakta olan kitaplar, son alıntılar,
   rastgele eski bir alıntı, bekleyen taramalar, yedek hatırlatması.
 - **Ayarlar:** Gemini anahtarı ve model kimliği, bağlantı testi, tarama çözünürlüğü, açık/koyu tema,
@@ -208,6 +212,9 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 2.7.0
+- Etiket yönetimi (yeniden adlandır, birleştir, sil) ve yapay zekâ ile etiket önerisi (tekli ve toplu).
 
 ### 2.6.0
 - Geçmiş kitap ekleme, toplu elle alıntı girişi, İstatistik ekranı, etiket girişi ve Etiketler sayfası,

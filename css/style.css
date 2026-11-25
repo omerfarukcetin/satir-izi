@@ -398,6 +398,15 @@ dialog .sticky-actions { bottom: 0; background: var(--surface); padding: .6rem 0
 .active-filter { display: flex; align-items: center; justify-content: space-between; gap: .5rem; background: var(--green-soft); border-radius: 12px; padding: .4rem .5rem .4rem .8rem; margin: .5rem 0; }
 .picker-list { max-height: 50vh; overflow: auto; }
 
+.tag-rows { display: grid; gap: .4rem; }
+.tag-row { display: flex; align-items: center; justify-content: space-between; gap: .5rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: .35rem .4rem .35rem .6rem; }
+.suggest-row { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-top: .45rem; }
+.suggest-list { display: grid; gap: .6rem; margin: .6rem 0; }
+.suggest-item { background: var(--surface-2); border-radius: 12px; padding: .6rem .75rem; }
+.suggest-text { margin: 0 0 .2rem; font-size: .95rem; }
+.suggest-item .chips { padding-bottom: 0; margin-top: .4rem; flex-wrap: wrap; }
+.new-tag { font-style: normal; font-size: .7rem; opacity: .75; }
+
 /* ---------- İstatistik ---------- */
 .period { margin-top: 1rem; }
 .chart { margin: 1rem 0; padding-bottom: .6rem; }

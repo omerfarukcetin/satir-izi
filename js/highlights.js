@@ -5,7 +5,8 @@ import { MARK_TYPES } from './database.js';
 import { state, bookById, findDuplicate, saveHighlights } from './store.js';
 import { refresh } from './router.js';
 import { button, pageHeader, emptyState, highlightCard, field, select } from './ui.js';
-import { tagInput, hasTag } from './tags.js';
+import { tagInput, hasTag, suggestForOne } from './tags.js';
+import { hasApiKey } from './gemini.js';
 import { wikiButton, relatedEditor, syncBacklinks } from './links.js';
 import { saveNote } from './store.js';
 
@@ -23,6 +24,19 @@ export function openHighlightEditor(h) {
     comment.value = h.comment || '';
     const tags = tagInput(h.tags || []);
     const related = relatedEditor(h.id);
+    const suggOut = el('div', { class: 'chips' });
+    const suggBtn = button('Etiket öner', { icon: 'scan', small: true, variant: 'ghost', disabled: !hasApiKey() || navigator.onLine === false,
+      title: hasApiKey() ? 'Yapay zekâ mevcut etiketlerine bakarak öneri yapar' : 'Ayarlar’dan Gemini anahtarı gir', onClick: async () => {
+        if (!text.value.trim()) { toast('Önce alıntı metnini yaz.'); return; }
+        suggBtn.disabled = true; suggOut.replaceChildren(el('span', { class: 'spinner spinner-sm', 'aria-hidden': 'true' }), el('span', { class: 'muted small' }, ' Düşünülüyor…'));
+        try {
+          const list = (await suggestForOne({ text: text.value, comment: comment.value, bookTitle: book?.title })).filter(t => !tags.has(t));
+          suggOut.replaceChildren(...(list.length ? list.map(t => el('button', { type: 'button', class: 'chip-btn chip-sm', onclick: e => { tags.add(t); e.currentTarget.remove(); } }, '+ #' + t))
+            : [el('span', { class: 'muted small' }, 'Yeni öneri yok.')]));
+        } catch (e) { suggOut.replaceChildren(el('span', { class: 'form-error' }, e.full || e.message)); }
+        finally { suggBtn.disabled = false; }
+      } });
+    const suggestRow = el('div', { class: 'suggest-row' }, suggBtn, suggOut);
     const fav = el('input', { type: 'checkbox', checked: !!h.favorite });
     const error = el('p', { class: 'form-error', role: 'alert', hidden: true });
     let result = null;
@@ -55,7 +69,7 @@ export function openHighlightEditor(h) {
       el('div', { class: 'grid-2' }, field('Sayfa', page), field('İşaret türü', mark)),
       el('div', { class: 'comment-field' }, field('Kişisel not (kendi yorumun)', comment, 'Başka bir kitaba [[Kitap adı]], konuya #etiket ile bağlantı verebilirsin.'),
         el('div', { class: 'row-actions' }, wikiButton(comment))),
-      el('div', { class: 'field' }, el('span', { class: 'field-label' }, 'Etiketler'), tags.root),
+      el('div', { class: 'field' }, el('span', { class: 'field-label' }, 'Etiketler'), tags.root, suggestRow),
       el('div', { class: 'field' }, el('span', { class: 'field-label' }, 'İlgili alıntılar ve notlar'), related.root),
       el('label', { class: 'check' }, fav, el('span', {}, 'Favorilere ekle')),
       error,
