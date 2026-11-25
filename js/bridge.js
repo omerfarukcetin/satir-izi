@@ -1,12 +1,12 @@
-// Satır İzi ↔ SEFER köprüsü.
-// SEFER aynı alan adında (omerfarukcetin.github.io) çalıştığı için bu modülü doğrudan içe aktarır:
+// Satır İzi ↔ Sefer köprüsü.
+// Sefer aynı alan adında (omerfarukcetin.github.io) çalıştığı için bu modülü doğrudan içe aktarır:
 //   const si = await import('../satir-izi/js/bridge.js');
 // Bilerek bağımsızdır (başka modül içe aktarmaz) ve veritabanını SÜRÜM BELİRTMEDEN açar;
 // böylece Satır İzi'nin şema yükseltmelerini asla tetiklemez veya engellemez. Her işlemden sonra bağlantıyı kapatır.
 //
-// Sayfa ilerlemesinin kaynağı SEFER'in günlük kayıtlarıdır:
-//   SEFER → setProgress(...) ile bağlı kitabın "okunan sayfa"sını mutlak değer olarak yazar.
-//   Satır İzi → queuePages(...) ile "bugün N sayfa okudum" kaydını SEFER'in gelen kutusuna bırakır.
+// Sayfa ilerlemesinin kaynağı Sefer'in günlük kayıtlarıdır:
+//   Sefer → setProgress(...) ile bağlı kitabın "okunan sayfa"sını mutlak değer olarak yazar.
+//   Satır İzi → queuePages(...) ile "bugün N sayfa okudum" kaydını Sefer'in gelen kutusuna bırakır.
 
 export const BRIDGE_VERSION = 1;
 const DB = 'satir-izi';
@@ -64,7 +64,7 @@ export const getBook = id => withDb(async db => {
 }, null);
 
 /**
- * SEFER'deki ilerlemeyi Satır İzi kitabına yazar (mutlak değerler).
+ * Sefer'deki ilerlemeyi Satır İzi kitabına yazar (mutlak değerler).
  * p: { readPages, totalPages, finished, link: { task, goal, due, streak } }
  */
 export const setProgress = (bookId, p) => withDb(async db => {
@@ -102,7 +102,7 @@ export const setProgress = (bookId, p) => withDb(async db => {
   return true;
 }, false);
 
-/** SEFER'deki bağlantı kaldırıldığında */
+/** Sefer'deki bağlantı kaldırıldığında */
 export const unlink = bookId => setProgress(bookId, { link: null });
 
 /** Günün alıntısı: aynı gün hep aynı alıntı döner. */
@@ -117,7 +117,7 @@ export const quoteOfDay = (day = new Date().toISOString().slice(0, 10)) => withD
   return { text: q.text, page: q.page || '', bookId: q.bookId, title: b?.title || '', author: b?.author || '' };
 }, null);
 
-// ---- Satır İzi → SEFER gelen kutusu (aynı cihaz) ----
+// ---- Satır İzi → Sefer gelen kutusu (aynı cihaz) ----
 export function queuePages(bookId, pages) {
   const n = Math.round(Number(pages));
   if (!bookId || !(n > 0)) return false;
@@ -127,7 +127,7 @@ export function queuePages(bookId, pages) {
   localStorage.setItem(INBOX_KEY, JSON.stringify(box.slice(-50)));
   return true;
 }
-/** SEFER çağırır: bekleyen kayıtları alır ve kutuyu boşaltır. */
+/** Sefer çağırır: bekleyen kayıtları alır ve kutuyu boşaltır. */
 export function takeInbox() {
   let box = [];
   try { box = JSON.parse(localStorage.getItem(INBOX_KEY) || '[]') || []; localStorage.removeItem(INBOX_KEY); } catch { box = []; }

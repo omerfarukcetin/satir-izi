@@ -171,18 +171,18 @@ export async function settingsView() {
   const privacy = card('Gizlilik',
     el('ul', { class: 'plain-list' },
       el('li', {}, 'Giriş yapmazsan kitapların, alıntıların ve notların yalnızca bu cihazda, tarayıcının IndexedDB deposunda tutulur.'),
-      el('li', {}, 'Giriş yaparsan aynı veriler, ayarların ve Gemini API anahtarın hesabına özel olarak Supabase’de (Emanet ve SEFER ile aynı proje) saklanır; satır güvenliği sayesinde yalnızca senin hesabın okuyabilir. Taslaklar ve tarama fotoğrafları buluta gitmez.'),
+      el('li', {}, 'Giriş yaparsan aynı veriler, ayarların ve Gemini API anahtarın hesabına özel olarak Supabase’de (Emanet ve Sefer ile aynı proje) saklanır; satır güvenliği sayesinde yalnızca senin hesabın okuyabilir. Taslaklar ve tarama fotoğrafları buluta gitmez.'),
       el('li', {}, 'Tarama yaptığında yalnızca o sayfanın fotoğrafı, senin API anahtarınla doğrudan Google Gemini API’ye gönderilir.'),
       el('li', {}, 'Gemini’nin ücretsiz katmanında Google, gönderilen içerikleri ürünlerini geliştirmek için kullanabilir ve insan incelemesinden geçirebilir. Kişisel veya hassas içerik barındıran sayfaları tarama.'),
       el('li', {}, 'Fotoğraflar kalıcı arşivde saklanmaz; onay ekranında kaydettiğinde veya taslağı sildiğinde geçici fotoğraf da silinir.'),
       el('li', {}, 'API anahtarın JSON yedeklerine, otomatik bulut yedeklerine, dışa aktarma dosyalarına ve uygulama önbelleğine hiçbir zaman eklenmez.')),
     el('p', {}, el('a', { href: 'https://ai.google.dev/gemini-api/terms', target: '_blank', rel: 'noopener noreferrer' }, 'Gemini API kullanım koşulları')));
 
-  // --- SEFER ---
+  // --- Sefer ---
   const embedded = document.documentElement.classList.contains('embedded');
-  const sefer = card('SEFER ile bağlantı',
-    el('p', {}, 'Satır İzi, SEFER’deki kitap okuma görevleriyle bağlantılıdır: SEFER’de bir görevi Satır İzi kitabına bağlarsan okuduğun sayfalar iki tarafta da görünür, SEFER’in Bugün ekranında günün alıntısı çıkar.'),
-    embedded ? el('p', { class: 'muted small' }, 'Şu an SEFER’in içinden açıyorsun.') : button('SEFER’e geç', { icon: 'chevron', href: '../sefer/' }));
+  const sefer = card('Sefer ile bağlantı',
+    el('p', {}, 'Satır İzi, Sefer’deki kitap okuma görevleriyle bağlantılıdır: Sefer’de bir görevi Satır İzi kitabına bağlarsan okuduğun sayfalar iki tarafta da görünür, Sefer’in Bugün ekranında günün alıntısı çıkar.'),
+    embedded ? el('p', { class: 'muted small' }, 'Şu an Sefer’in içinden açıyorsun.') : button('Sefer’e geç', { icon: 'chevron', href: '../sefer/' }));
 
   // --- Tehlikeli bölge ---
   const danger = card('Tüm verileri sil',

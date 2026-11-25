@@ -62,7 +62,7 @@ export function makeBook(p = {}, now = nowISO()) {
     status,
     review: str(p.review, 50000),
     rating,
-    // SEFER bağlantısı (SEFER yazar; ilerlemenin kaynağı SEFER'dir)
+    // Sefer bağlantısı (Sefer yazar; ilerlemenin kaynağı Sefer'dir)
     sefer: p.sefer && typeof p.sefer === 'object' && p.sefer.task ? {
       task: str(p.sefer.task, 120), goal: numOrNull(p.sefer.goal) || 0,
       due: dateOnly(p.sefer.due), streak: numOrNull(p.sefer.streak) || 0, at: isoOr(p.sefer.at, now),

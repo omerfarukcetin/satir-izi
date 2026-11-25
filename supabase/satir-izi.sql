@@ -1,4 +1,4 @@
--- Satır İzi için Supabase tabloları (Emanet ve SEFER ile aynı projede, ayrı tablolar).
+-- Satır İzi için Supabase tabloları (Emanet ve Sefer ile aynı projede, ayrı tablolar).
 -- Supabase paneli → SQL Editor → New query → bu dosyanın tamamını yapıştırıp "Run".
 -- Birden çok kez çalıştırılabilir; mevcut veriyi silmez.
 

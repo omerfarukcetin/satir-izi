@@ -35,7 +35,7 @@ export function openAuthDialog() {
     const form = el('form', { class: 'form', novalidate: true },
       el('div', { class: 'auth-brand' }, el('img', { src: 'assets/icons/icon-192.png', alt: '', width: 44, height: 44 }), el('strong', {}, 'Satır İzi')),
       el('h2', {}, 'Hesabına giriş yap'),
-      el('p', { class: 'muted' }, 'Emanet ve SEFER’de kullandığın hesapla giriş yapabilirsin. Kitapların, alıntıların, ayarların ve Gemini API anahtarın bütün cihazlarında eşitlenir.'),
+      el('p', { class: 'muted' }, 'Emanet ve Sefer’de kullandığın hesapla giriş yapabilirsin. Kitapların, alıntıların, ayarların ve Gemini API anahtarın bütün cihazlarında eşitlenir.'),
       el('label', { class: 'field' }, el('span', { class: 'field-label' }, 'E-posta'), email),
       el('label', { class: 'field' }, el('span', { class: 'field-label' }, 'Şifre'), el('div', { class: 'input-with-btn' }, pass, showBtn)),
       msg,
@@ -110,7 +110,7 @@ export async function accountCard() {
   const card = el('section', { class: 'card settings-card' }, el('h2', {}, 'Hesap ve eşitleme'));
   if (!user) {
     card.append(
-      el('p', {}, 'Giriş yaparsan kitapların, alıntıların, notların, ayarların ve Gemini API anahtarın telefonunla bilgisayarın arasında eşitlenir. Emanet ve SEFER’deki hesabını kullanabilirsin.'),
+      el('p', {}, 'Giriş yaparsan kitapların, alıntıların, notların, ayarların ve Gemini API anahtarın telefonunla bilgisayarın arasında eşitlenir. Emanet ve Sefer’deki hesabını kullanabilirsin.'),
       el('div', { class: 'row-actions' }, button('Giriş yap / Hesap oluştur', { variant: 'primary', icon: 'key', onClick: openAuthDialog })),
       el('p', { class: 'muted small' }, 'Giriş yapmadan da kullanabilirsin; o durumda veriler yalnızca bu cihazda kalır.'));
     return card;
@@ -180,7 +180,7 @@ export async function loginSuggestion() {
   const card = el('div', { class: 'callout callout-soft' }, icon('key'),
     el('div', {},
       el('strong', {}, 'Arşivin bütün cihazlarında olsun'),
-      el('p', { class: 'small' }, 'Emanet ve SEFER’deki hesabınla giriş yap; kitapların, alıntıların ve API anahtarın telefon ile bilgisayar arasında eşitlensin ve her gün otomatik yedeklensin.'),
+      el('p', { class: 'small' }, 'Emanet ve Sefer’deki hesabınla giriş yap; kitapların, alıntıların ve API anahtarın telefon ile bilgisayar arasında eşitlensin ve her gün otomatik yedeklensin.'),
       el('div', { class: 'row-actions' },
         button('Giriş yap', { small: true, variant: 'primary', onClick: openAuthDialog }),
         button('Şimdi değil', { small: true, variant: 'ghost', onClick: async () => { await setSetting('loginSuggestionDismissed', true); card.remove(); } }))));

@@ -15,7 +15,7 @@ import { settingsView, applyAppearance } from './settings.js';
 import { initSync, onSyncChange, onRemoteApplied } from './sync.js';
 import { wireSync } from './account.js';
 
-// SEFER içinde (iframe) açıldıysa gömülü düzen
+// Sefer içinde (iframe) açıldıysa gömülü düzen
 export const EMBEDDED = new URLSearchParams(location.search).get('embed') === 'sefer' || window.top !== window.self;
 if (EMBEDDED) document.documentElement.classList.add('embedded');
 
@@ -33,7 +33,7 @@ function buildNav() {
   $('#nav').replaceChildren(...[
     el('a', { class: 'nav-brand', href: '#/' }, el('img', { src: 'assets/icons/icon-192.png', alt: '', width: 36, height: 36 }), el('span', {}, 'Satır İzi')),
     el('div', { class: 'nav-links' }, links),
-    EMBEDDED ? null : el('a', { class: 'nav-extra', href: '../sefer/', title: 'SEFER — günlük takip' }, el('span', { class: 'nav-icon' }, icon('chevron', { size: 18 })), el('span', {}, 'SEFER’e geç')),
+    EMBEDDED ? null : el('a', { class: 'nav-extra', href: '../sefer/', title: 'Sefer — günlük takip' }, el('span', { class: 'nav-icon' }, icon('chevron', { size: 18 })), el('span', {}, 'Sefer’e geç')),
   ].filter(Boolean));
 }
 
@@ -126,7 +126,7 @@ async function init() {
   });
   initSync().catch(e => console.warn('Eşitleme başlatılamadı', e));
 
-  // SEFER köprüsü veritabanına yazdığında (ör. sayfa ilerlemesi) yeniden yükle ve eşitle
+  // Sefer köprüsü veritabanına yazdığında (ör. sayfa ilerlemesi) yeniden yükle ve eşitle
   window.addEventListener('storage', async e => {
     if (e.key !== 'satir-izi-external-change') return;
     await loadState();

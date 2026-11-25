@@ -1,4 +1,4 @@
-// Satır İzi bulut ayarları (Emanet ve SEFER ile aynı Supabase projesi).
+// Satır İzi bulut ayarları (Emanet ve Sefer ile aynı Supabase projesi).
 // supabaseUrl veya supabaseKey boşsa uygulama yalnızca bu cihazda çalışır; hesap bölümü gizlenir.
 // Değerler: Supabase paneli → Project Settings → API → "Project URL" ve "publishable / anon" anahtarı.
 // Bu anahtar herkese açık olacak şekilde tasarlanmıştır; verileri satır güvenliği (RLS) korur.

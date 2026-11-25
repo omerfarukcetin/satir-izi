@@ -36,15 +36,15 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
   (destekleyen tarayıcılarda ekranın kapanması engellenir).
 - **Alıntılarım:** tüm kitaplarda Türkçe büyük/küçük harf duyarlı arama, kitap ve favori filtresi,
   kişisel not ve etiketler, panoya kopyalama.
-- **Hesap ve eşitleme (isteğe bağlı):** Emanet ve SEFER ile aynı Supabase projesi ve aynı hesapla e-posta/şifre girişi.
+- **Hesap ve eşitleme (isteğe bağlı):** Emanet ve Sefer ile aynı Supabase projesi ve aynı hesapla e-posta/şifre girişi.
   Kitaplar, alıntılar, notlar, eşitlenen ayarlar (model, tema, yazı boyutu, tarama ayarları) ve Gemini API anahtarı
   bütün cihazlarda eşitlenir. Eşitleme **kayıt düzeyindedir**: iki cihazda ayrı ayrı eklenen alıntıların ikisi de korunur,
   aynı kayıt iki yerde değiştiyse yeni olan kazanır, silinenler diğer cihazlardan da silinir. Her günün son hâli
   30 gün boyunca otomatik bulut yedeği olarak saklanır (API anahtarı hariç). Giriş yapmadan kullanım aynen sürer.
-- **SEFER bağlantısı:** Satır İzi, SEFER’in içinde “Kitaplar” sekmesi olarak açılır (ayrıca bağımsız da çalışır).
-  SEFER’deki okuma görevi bir Satır İzi kitabına bağlanabilir: SEFER’de girilen sayfalar Satır İzi’deki ilerlemeye,
-  Satır İzi’de “Bugün okudum” ile girilenler SEFER’deki göreve işlenir; kitap bitince iki tarafta da tamamlanır.
-  SEFER’in Bugün ekranında arşivden “günün satırı” gösterilir.
+- **Sefer bağlantısı:** Satır İzi, Sefer’in içinde “Kitaplar” sekmesi olarak açılır (ayrıca bağımsız da çalışır).
+  Sefer’deki okuma görevi bir Satır İzi kitabına bağlanabilir: Sefer’de girilen sayfalar Satır İzi’deki ilerlemeye,
+  Satır İzi’de “Bugün okudum” ile girilenler Sefer’deki göreve işlenir; kitap bitince iki tarafta da tamamlanır.
+  Sefer’in Bugün ekranında arşivden “günün satırı” gösterilir.
 - **Ana sayfa:** kitap / okunan / tamamlanan / alıntı / not sayıları, okunmakta olan kitaplar, son alıntılar,
   rastgele eski bir alıntı, bekleyen taramalar, yedek hatırlatması.
 - **Ayarlar:** Gemini anahtarı ve model kimliği, bağlantı testi, tarama çözünürlüğü, açık/koyu tema,
@@ -80,10 +80,10 @@ Kota dolduğunda uygulama ücretli bir modele veya ücretli kullanıma kendiliğ
 
 ## Hesap kurulumu (bir kez)
 
-Satır İzi, Emanet ve SEFER'in kullandığı Supabase projesini kullanır (`js/config.js`). Bu projede yalnızca iki ayar yapılır:
+Satır İzi, Emanet ve Sefer'in kullandığı Supabase projesini kullanır (`js/config.js`). Bu projede yalnızca iki ayar yapılır:
 
 1. **Tabloları oluştur:** Supabase paneli → **SQL Editor** → New query → `supabase/satir-izi.sql` dosyasının tamamını
-   yapıştırıp **Run**. (Birden çok kez çalıştırılabilir; Emanet/SEFER tablolarına dokunmaz.)
+   yapıştırıp **Run**. (Birden çok kez çalıştırılabilir; Emanet/Sefer tablolarına dokunmaz.)
 2. **Yönlendirme adresini ekle:** Authentication → **URL Configuration** → Redirect URLs listesine
    `https://omerfarukcetin.github.io/satir-izi/` ekle. Hesap onay ve şifre yenileme e-postalarındaki bağlantılar
    bu sayede Satır İzi'ye döner.
@@ -141,7 +141,7 @@ satir-izi/
     ├── config.js           Supabase adresi ve herkese açık anahtar
     ├── sync.js             Giriş, kayıt düzeyinde eşitleme, bulut yedeği
     ├── account.js          Hesap arayüzü (giriş, çıkış, bulut yedekleri)
-    ├── bridge.js           SEFER köprüsü (bağımsız modül; SEFER içe aktarır)
+    ├── bridge.js           Sefer köprüsü (bağımsız modül; Sefer içe aktarır)
     ├── vendor/supabase.js  supabase-js 2.45.4 (Emanet ile aynı dosya)
     ├── router.js           Hash yönlendirici (#/kitaplar, #/kitap/:id, #/tara, #/onay/:id …)
     ├── database.js         IndexedDB, şema, v1 → v2 migrasyonu, kayıt fabrikaları
@@ -184,27 +184,27 @@ fotoğraflar onaydan sonra silinir ve yedeğe girmez.
 Kayıt kimlikleri korunur. Eski depo güvenlik için silinmeden bırakılır. Eski varsayılan modeli kullananlar
 `gemini-3.5-flash-lite` modeline geçirilir; özel model seçimi korunur.
 
-## SEFER ile bağlantı (geliştirici notu)
+## Sefer ile bağlantı (geliştirici notu)
 
 İki uygulama aynı alan adında (`omerfarukcetin.github.io`) çalışır; bu yüzden aynı tarayıcıda Supabase oturumu ve
-cihazdaki veriler ortaktır. SEFER, `../satir-izi/js/bridge.js` modülünü içe aktarır. Köprü:
+cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe aktarır. Köprü:
 
 - Satır İzi veritabanını **sürüm belirtmeden** açar, hiçbir zaman şema yükseltmesi tetiklemez ve her işlemden sonra kapatır.
-- `listBooks`, `getBook`, `setProgress` (SEFER → mutlak okunan sayfa, bitti bilgisi, görev bilgisi), `unlink`,
-  `quoteOfDay`, `queuePages` / `takeInbox` (Satır İzi → SEFER “bugün okudum” gelen kutusu) sunar.
-- Sayfa ilerlemesinin tek kaynağı SEFER’in günlük kayıtlarıdır; böylece aynı sayfa iki kez sayılmaz.
+- `listBooks`, `getBook`, `setProgress` (Sefer → mutlak okunan sayfa, bitti bilgisi, görev bilgisi), `unlink`,
+  `quoteOfDay`, `queuePages` / `takeInbox` (Satır İzi → Sefer “bugün okudum” gelen kutusu) sunar.
+- Sayfa ilerlemesinin tek kaynağı Sefer’in günlük kayıtlarıdır; böylece aynı sayfa iki kez sayılmaz.
   Bağlı kitapta Satır İzi’deki “Okunan sayfa” alanı salt okunurdur.
-- Köprünün dışa açtığı işlevler değiştirilirken SEFER’deki çağrılar da güncellenmelidir.
+- Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
 
 ### 2.3.0
-- SEFER bağlantısı: köprü modülü, SEFER içinde gömülü düzen, bağlı kitapta SEFER kutusu ve “Bugün okudum”,
-  masaüstü menüsünde ve Ayarlar’da SEFER’e geçiş.
+- Sefer bağlantısı: köprü modülü, Sefer içinde gömülü düzen, bağlı kitapta Sefer kutusu ve “Bugün okudum”,
+  masaüstü menüsünde ve Ayarlar’da Sefer’e geçiş.
 - Eşitlemeler artık sırayla çalışır; “Şimdi eşitle” işlemin bitmesini bekler.
 
 ### 2.2.0
-- Hesap ve eşitleme: Emanet/SEFER ile aynı Supabase hesabıyla giriş, kayıt düzeyinde birleştirme, silme izleri,
+- Hesap ve eşitleme: Emanet/Sefer ile aynı Supabase hesabıyla giriş, kayıt düzeyinde birleştirme, silme izleri,
   ayarların ve Gemini API anahtarının eşitlenmesi, günlük otomatik bulut yedeği ve geri yükleme.
 - Çıkış yaparken verileri cihazda bırakma veya silme seçeneği; hesap değişiminde onay.
 - JSON geri yükleme ve “Tüm verileri sil” giriş yapılmışken buluta da doğru yansıyor.

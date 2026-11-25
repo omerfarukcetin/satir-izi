@@ -376,7 +376,7 @@ dialog .sticky-actions { bottom: 0; background: var(--surface); padding: .6rem 0
   .dialog { width: 100vw; max-width: 100vw; max-height: 94dvh; margin: auto 0 0; border-radius: 20px 20px 0 0; padding-bottom: calc(1rem + env(safe-area-inset-bottom)); }
 }
 
-/* ---------- SEFER bağlantısı ---------- */
+/* ---------- Sefer bağlantısı ---------- */
 .nav-extra { display: none; }
 @media (min-width: 900px) {
   .nav-extra { display: flex; align-items: center; gap: .65rem; margin-top: auto; padding: .55rem .6rem; border-radius: 12px; color: var(--muted); text-decoration: none; font-weight: 600; font-size: .9rem; }
@@ -387,7 +387,7 @@ dialog .sticky-actions { bottom: 0; background: var(--surface); padding: .6rem 0
 .sefer-hint { display: flex; gap: .3rem; align-items: baseline; flex-wrap: wrap; margin-top: .75rem; }
 .warn-text { color: var(--warn); margin: .25rem 0 0; }
 
-/* Gömülü (SEFER içinde) düzen: alt menü yerine üstte sekmeler */
+/* Gömülü (Sefer içinde) düzen: alt menü yerine üstte sekmeler */
 .embedded .shell { padding-bottom: 1rem; margin-left: 0; }
 .embedded .nav { position: sticky; top: 0; bottom: auto; width: auto; border-top: 0; border-right: 0; border-bottom: 1px solid var(--line); padding: 0; background: color-mix(in srgb, var(--surface) 94%, transparent); display: block; }
 .embedded .nav-brand, .embedded .nav-extra { display: none !important; }

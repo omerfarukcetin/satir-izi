@@ -1,6 +1,6 @@
 // Hesap (Supabase) ve cihazlar arası eşitleme.
 //
-// Emanet / SEFER ile aynı Supabase projesi ve aynı hesap. Her kullanıcının verisi satir_izi_state
+// Emanet / Sefer ile aynı Supabase projesi ve aynı hesap. Her kullanıcının verisi satir_izi_state
 // tablosunda tek satırdadır ve yalnızca sahibi erişebilir (RLS).
 //
 // Eşitleme kayıt düzeyindedir: iki cihazda ayrı ayrı eklenen alıntıların ikisi de korunur.
