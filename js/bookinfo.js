@@ -62,6 +62,25 @@ async function fromOpenLibrary(isbn, signal) {
   };
 }
 
+/**
+ * Bağlantıdan gelen kapak adresi: önce cihaza kopyalamayı dener (izin verilirse),
+ * olmazsa adresin gerçekten bir resim olduğunu doğrulayıp adresi döner. Resim değilse null.
+ */
+export async function resolveRemoteCover(url, { signal } = {}) {
+  if (!/^https:\/\//.test(url || '')) return null;
+  const copy = await fetchCover(url, signal);
+  if (copy) return copy;
+  return new Promise(resolve => {
+    const img = new Image();
+    img.referrerPolicy = 'no-referrer';
+    const done = v => { clearTimeout(t); resolve(v); };
+    const t = setTimeout(() => done(null), LOOKUP_TIMEOUT);
+    img.onload = () => done(img.naturalWidth >= 60 && img.naturalHeight >= 80 && img.naturalHeight >= img.naturalWidth * 0.9 ? url : null);
+    img.onerror = () => done(null);
+    img.src = url;
+  });
+}
+
 /** Kapak görselini indirip küçük bir JPEG'e çevirir. Site izin vermezse null (kapaksız devam edilir). */
 async function fetchCover(url, signal) {
   if (!url) return null;
@@ -117,17 +136,17 @@ export async function searchByTitle(q, { signal } = {}) {
   const score = title => { const w = words(title); return want.filter(x => w.includes(x)).length / Math.max(want.length, 1); };
   const [g, o] = await Promise.all([
     getJson(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5&printType=books`, signal),
-    getJson(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=5&fields=title,author_name,publisher,number_of_pages_median,isbn`, signal),
+    getJson(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=5&fields=title,author_name,publisher,number_of_pages_median,isbn,cover_i`, signal),
   ]);
   const cands = [];
   for (const it of g?.items || []) {
     const v = it.volumeInfo || {};
     const isbn = (v.industryIdentifiers || []).find(x => x.type === 'ISBN_13')?.identifier || '';
-    cands.push({ source: 'Google Books', title: clean(v.title), author: clean((v.authors || []).join(', ')), publisher: clean(v.publisher), totalPages: pages(v.pageCount), isbn });
+    cands.push({ source: 'Google Books', title: clean(v.title), author: clean((v.authors || []).join(', ')), publisher: clean(v.publisher), totalPages: pages(v.pageCount), isbn, coverUrl: https(v.imageLinks?.thumbnail) });
   }
   for (const d of o?.docs || []) {
     const isbn = (d.isbn || []).find(x => /^97[89]/.test(x)) || '';
-    cands.push({ source: 'Open Library', title: clean(d.title), author: clean((d.author_name || []).join(', ')), publisher: clean((d.publisher || [])[0]), totalPages: pages(d.number_of_pages_median), isbn });
+    cands.push({ source: 'Open Library', title: clean(d.title), author: clean((d.author_name || []).join(', ')), publisher: clean((d.publisher || [])[0]), totalPages: pages(d.number_of_pages_median), isbn, coverUrl: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg` : '' });
   }
   const best = cands.map(c => ({ ...c, s: score(c.title) })).filter(c => c.title && c.s >= 0.6).sort((a, b) => b.s - a.s)[0];
   return best || null;

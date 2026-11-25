@@ -46,7 +46,8 @@ const strList = v => (Array.isArray(v) ? v.filter(x => typeof x === 'string' && 
 export function makeBook(p = {}, now = nowISO()) {
   const status = BOOK_STATUSES.some(s => s.value === p.status) ? p.status : 'okunacak';
   const rating = Math.min(5, Math.max(0, Math.round(Number(p.rating) || 0)));
-  const cover = typeof p.cover === 'string' && p.cover.startsWith('data:image/') ? p.cover : '';
+  // Kapak: cihazda saklanan görsel (data:image) veya kopyalanamayan uzak görselin https adresi
+  const cover = typeof p.cover === 'string' && (p.cover.startsWith('data:image/') || /^https:\/\/[^\s"'<>]{8,1000}$/.test(p.cover)) ? p.cover : '';
   return {
     id: typeof p.id === 'string' && p.id ? p.id : uid(),
     title: str(p.title, 300).trim(),

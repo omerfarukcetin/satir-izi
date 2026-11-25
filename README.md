@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v2.8.0)
+## Özellikler (v2.9.0)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -20,6 +20,8 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
   Kitap bağlantısı (1000kitap, Kitapyurdu, D&R, İdefix, Amazon…) yapıştırılırsa Gemini sayfayı okur (URL bağlamı);
   sayfa açılamazsa (veya Gemini kotası doluysa) bağlantıdaki ad ücretsiz kataloglarda aranır ve bu ekranda belirtilir.
   Google araması kullanılmaz (Gemini 3 ücretsiz katmanında kapalıdır ve ücretli olabilir).
+  Sayfadaki kapak görseli de alınır: cihaza kopyalanabiliyorsa saklanır, site izin vermiyorsa adresiyle gösterilir
+  (görsel yüklenip dikey bir kapak olduğu doğrulanmadan kabul edilmez).
 - **Kitaplar:** ad ve yazar zorunlu; yayınevi, kapak, ISBN, kategori, sayfa sayıları, tarihler, okuma durumu
   (Okunacak / Okunuyor / Tamamlandı / Yarım bırakıldı), puan ve kişisel değerlendirme isteğe bağlı.
   Arama, duruma göre filtreleme, sıralama, onaylı silme.
@@ -215,6 +217,10 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 2.9.0
+- Bağlantıdan doldururken sayfadaki kapak görseli de alınır; katalog adla aramasında da kapak gelir.
+  Kopyalanamayan kapaklar adresiyle saklanır, açılamazsa harf kapağa döner.
 
 ### 2.8.1
 - Bağlantıdan doldurma: Google araması kaldırıldı (ücretsiz katmanda kapalı olduğu için kota hatası veriyordu).

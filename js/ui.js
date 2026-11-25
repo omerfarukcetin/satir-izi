@@ -33,7 +33,12 @@ export function emptyState(text, action) {
 }
 
 export function cover(book, size = 'md') {
-  if (book?.cover) return el('img', { class: `cover cover-${size}`, src: book.cover, alt: '' });
+  if (book?.cover) {
+    const img = el('img', { class: `cover cover-${size}`, src: book.cover, alt: '', loading: 'lazy', referrerpolicy: 'no-referrer' });
+    // Uzak kapak açılamazsa (çevrimdışı vb.) harf kapağa dön
+    img.addEventListener('error', () => img.replaceWith(cover({ ...book, cover: '' }, size)), { once: true });
+    return img;
+  }
   const initials = (book?.title || '?').trim().slice(0, 1).toLocaleUpperCase('tr');
   return el('div', { class: `cover cover-${size} cover-placeholder`, 'aria-hidden': 'true' }, el('span', {}, initials));
 }

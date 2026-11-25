@@ -6,7 +6,7 @@ import { state, bookById, highlightsOf, notesOf, saveBook, deleteBook, saveNote,
 import { navigate, refresh } from './router.js';
 import { button, iconButton, pageHeader, emptyState, cover, bookCard, progressBar, statusChip, highlightCard, field, select } from './ui.js';
 import { fileToCover } from './scanner.js';
-import { lookupIsbn, normalizeIsbn, photoForReading, searchByTitle } from './bookinfo.js';
+import { lookupIsbn, normalizeIsbn, photoForReading, searchByTitle, resolveRemoteCover } from './bookinfo.js';
 import { extractBookInfo, extractBookFromUrl, hasApiKey, slugHint } from './gemini.js';
 import { openHighlightEditor } from './highlights.js';
 import { exportBook } from './export.js';
@@ -111,6 +111,8 @@ function autoFillBox({ f, more, hasCover, setCover }) {
     }
     try {
       if (info && (info.title || info.author || info.isbn)) {
+        // Sayfadaki kapak (katalog kapağından önce gelir; doğrulanmadan kabul edilmez)
+        if (info.coverUrl && !hasCover()) { say('Kapak alınıyor…', 'busy'); info.cover = await resolveRemoteCover(info.coverUrl, { signal: ctrl.signal }); }
         const filled = apply(info);
         if (normalizeIsbn(info.isbn)) { busy(false); await byIsbn(info.isbn, { quiet: true, prefix: filled }); say(`${status.textContent} (sayfadan okundu)`, 'ok'); return; }
         say(`Doldurulan: ${filled.join(', ') || 'yok'} (sayfadan okundu). Kontrol edip kaydet.`, 'ok');
@@ -123,6 +125,7 @@ function autoFillBox({ f, more, hasCover, setCover }) {
       say(`${why}; “${hint}” kataloglarda aranıyor…`, 'busy');
       const found = await searchByTitle(hint, { signal: ctrl.signal });
       if (!found) { say(`${why} ve “${hint}” kataloglarda bulunamadı. Kapağın fotoğrafını çekmeyi dene.`, 'warn'); return; }
+      if (found.coverUrl && !hasCover()) found.cover = await resolveRemoteCover(found.coverUrl, { signal: ctrl.signal });
       const filled = apply(found);
       const whyLc = why.startsWith('Gemini') ? why : why.charAt(0).toLocaleLowerCase('tr') + why.slice(1);
       const note = `${whyLc}; ${found.source} kataloğunda adla bulundu — baskı farklı olabilir, kontrol et`;
