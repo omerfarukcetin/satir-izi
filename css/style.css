@@ -174,6 +174,19 @@ select { appearance: auto; }
 .more-fields summary { cursor: pointer; font-weight: 600; color: var(--green); padding: .5rem 0; }
 .cover-edit { display: flex; align-items: center; gap: 1rem; margin: .75rem 0; }
 
+/* ---------- Otomatik doldurma ---------- */
+.autofill { background: var(--green-soft); border-radius: 14px; padding: .8rem .9rem; margin: .5rem 0 1rem; }
+.autofill-title { display: flex; align-items: center; gap: .4rem; margin: 0 0 .6rem; color: var(--green); }
+.isbn-row { display: flex; gap: .5rem; margin-top: .6rem; }
+.isbn-row input { flex: 1; min-height: 38px; padding: .4rem .7rem; }
+.autofill-status { display: flex; align-items: center; gap: .4rem; font-size: .88rem; font-weight: 600; margin: .6rem 0 .2rem; min-height: 1.2em; }
+.autofill-status:empty { display: none; }
+.autofill-status[data-kind="ok"] { color: var(--green); }
+.autofill-status[data-kind="warn"] { color: var(--warn); }
+.autofill-status[data-kind="error"] { color: var(--danger); }
+.autofill .muted.small { margin: .4rem 0 0; }
+.autofill-wrap > summary { cursor: pointer; font-weight: 600; color: var(--green); padding: .4rem 0; }
+
 /* ---------- Arama/araç çubuğu ---------- */
 .toolbar { display: flex; gap: .5rem; flex-wrap: wrap; margin: .5rem 0; }
 .toolbar > select { flex: 1 1 160px; width: auto; }
