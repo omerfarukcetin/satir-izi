@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v3.2.1)
+## Özellikler (v3.2.2)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -237,6 +237,14 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 3.2.2
+- Eşitleme düzeltmeleri: iki cihaz aynı anda yazdığında birinin değişikliği kaybolabiliyordu; artık yazma yalnızca
+  okunan bulut sürümü değişmediyse yapılır, değiştiyse yeniden okunup birleştirilir (en fazla 4 deneme).
+- Açık kalan sayfa (bilgisayar, Sefer içindeki sekme) buluttaki değişikliği 30 sn'de bir ve pencereye dönüldüğünde
+  kontrol eder (yalnızca sürüm alanı okunur).
+- Uygulama arka plana geçerken bekleyen değişiklik beklemeden gönderilir.
+- Ayarlar → Hesap ve eşitleme → “Eşitleme ayrıntıları”: bu cihaz ve buluttaki kayıt sayıları, son hata, sürüm.
 
 ### 3.2.1
 - Kapak görselini bağlantıdan ekleme.

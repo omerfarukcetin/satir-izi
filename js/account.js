@@ -1,5 +1,5 @@
 // Hesap arayüzü: giriş/kayıt diyaloğu, şifre yenileme, hesap kartı, bulut yedekleri.
-import { el, toast, confirmDialog, choiceDialog, formatDate } from './utils.js';
+import { el, toast, confirmDialog, choiceDialog, formatDate, APP_VERSION } from './utils.js';
 import { icon } from './icons.js';
 import { getSetting, setSetting } from './database.js';
 import { state } from './store.js';
@@ -88,6 +88,22 @@ export function openNewPasswordDialog() {
 }
 
 /** Bu cihazdaki arşiv başka bir hesaba aitse ne yapılacağını sor. */
+/** Eşitleme durumu: bu cihaz ile buluttaki kayıt sayıları; iki cihazda karşılaştırmak için. */
+function syncDiag() {
+  const d = sync.diag;
+  const local = `${state.books.length} kitap · ${state.highlights.length} alıntı · ${state.notes.length} not`;
+  const cloud = d.cloud ? `${d.cloud.books} kitap · ${d.cloud.highlights} alıntı · ${d.cloud.notes} not` : 'henüz okunmadı';
+  return el('details', { class: 'sync-diag' },
+    el('summary', {}, 'Eşitleme ayrıntıları'),
+    el('dl', {},
+      el('dt', {}, 'Bu cihaz'), el('dd', {}, local),
+      el('dt', {}, 'Bulut'), el('dd', {}, cloud),
+      el('dt', {}, 'Son başarılı'), el('dd', {}, d.lastOkAt ? formatDate(d.lastOkAt, true) : '—'),
+      d.lastError ? [el('dt', {}, 'Son hata'), el('dd', {}, `${d.lastError}${d.lastErrorAt ? ' (' + formatDate(d.lastErrorAt, true) + ')' : ''}`)] : null,
+      el('dt', {}, 'Sürüm'), el('dd', {}, APP_VERSION)),
+    el('p', { class: 'muted small' }, 'Telefonda ve bilgisayarda aynı e-postayla giriş yapıldığını ve sayıların aynı olduğunu buradan kontrol edebilirsin. Açık kalan sayfa buluttaki değişiklikleri 30 saniyede bir kontrol eder.'));
+}
+
 export async function askOtherOwner({ email }) {
   const c = await choiceDialog({
     title: 'Bu cihazda başka bir hesabın arşivi var',
@@ -123,6 +139,7 @@ export async function accountCard() {
       st.state === 'syncing' ? el('span', { class: 'spinner spinner-sm', 'aria-hidden': 'true' }) : icon(st.state === 'ok' ? 'check' : st.state === 'error' ? 'alert' : st.state === 'offline' ? 'wifiOff' : 'check', { size: 16 }),
       el('span', {}, st.state === 'error' || st.state === 'offline' ? st.message : STATUS_TEXT[st.state] || ''),
       last ? el('span', { class: 'muted small' }, ` · son eşitleme ${formatDate(last, true)}`) : null),
+    syncDiag(),
     el('p', { class: 'muted small' }, 'Gemini API anahtarın da hesabına kaydedilir ve satır güvenliğiyle yalnızca senin hesabın okuyabilir. Otomatik bulut yedeklerine anahtar girmez.'),
     el('div', { class: 'row-actions' },
       button('Şimdi eşitle', { small: true, icon: 'rotateRight', onClick: async () => { await sync.syncNow(); refresh(); } }),

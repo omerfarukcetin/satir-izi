@@ -568,3 +568,10 @@ dialog .sticky-actions { bottom: 0; background: var(--surface); padding: .6rem 0
   body { background: #fff; color: #000; }
   .hl-card, .card, .book-card { box-shadow: none; break-inside: avoid; }
 }
+
+/* Eşitleme ayrıntıları */
+.sync-diag { margin: .4rem 0 .6rem; font-size: var(--t-meta); }
+.sync-diag summary { cursor: pointer; color: var(--muted); }
+.sync-diag dl { display: grid; grid-template-columns: auto 1fr; gap: .2rem .8rem; margin: .5rem 0; }
+.sync-diag dt { color: var(--muted); }
+.sync-diag dd { margin: 0; overflow-wrap: anywhere; }

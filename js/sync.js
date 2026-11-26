@@ -184,57 +184,100 @@ export function syncNow(opts = {}) {
   return p;
 }
 
+// Son görülen bulut sürümü ve tanılama bilgisi (ayarlar ekranında gösterilir)
+let remoteSeen = 0;
+export const diag = { lastOkAt: null, lastError: '', lastErrorAt: null, cloud: null, conflicts: 0 };
+
 async function runSync({ authoritative = false } = {}) {
   if (!sb || !user) return;
   if (navigator.onLine === false) { setStatus('offline', 'Çevrimdışı · değişiklikler cihazda duruyor'); return; }
   syncing = true;
+  pending = false;
   setStatus('syncing', 'Eşitleniyor…');
   try {
-    const r = await sb.from(CONFIG.stateTable).select('data,updated_at').eq('user_id', user.id).maybeSingle();
-    if (r.error) throw r.error;
-    const remote = sanitizeRemote(r.data?.data);
-    if (remote && remote.schemaVersion > SYNC_SCHEMA) {
-      setStatus('error', 'Buluttaki veri uygulamanın daha yeni bir sürümüyle kaydedilmiş. Uygulamayı güncelleyin.');
-      return;
+    // Başka cihaz aynı anda yazarsa (okuma ile yazma arasında) yazma reddedilir; yeniden okunup birleştirilir.
+    for (let attempt = 1; ; attempt++) {
+      const r = await sb.from(CONFIG.stateTable).select('data,updated_at').eq('user_id', user.id).maybeSingle();
+      if (r.error) throw r.error;
+      const remoteAt = r.data ? Number(r.data.updated_at) || 0 : null;
+      const remote = sanitizeRemote(r.data?.data);
+      if (remote && remote.schemaVersion > SYNC_SCHEMA) {
+        setStatus('error', 'Buluttaki veri uygulamanın daha yeni bir sürümüyle kaydedilmiş. Uygulamayı güncelleyin.');
+        return;
+      }
+      const local = await localSnapshot();
+      let merged;
+      if (authoritative && remote) {
+        // Geri yükleme / tümünü silme: bu cihazdaki hâl esas alınır.
+        const now = nowISO();
+        const localIds = new Set([...local.books, ...local.highlights, ...local.notes].map(x => x.id));
+        const tombs = { ...local.tombstones };
+        for (const x of [...remote.books, ...remote.highlights, ...remote.notes]) if (!localIds.has(x.id)) tombs[x.id] = now;
+        const bump = list => list.map(x => ({ ...x, updatedAt: now }));
+        merged = { ...local, books: bump(local.books), highlights: bump(local.highlights), notes: bump(local.notes), tombstones: tombs };
+        await db.runTx(['books', 'highlights', 'notes'], 'readwrite', tx => {
+          merged.books.forEach(x => tx.objectStore('books').put(x));
+          merged.highlights.forEach(x => tx.objectStore('highlights').put(x));
+          merged.notes.forEach(x => tx.objectStore('notes').put(x));
+        });
+        await db.put('settings', { key: 'tombstones', value: tombs });
+        await loadState();
+      } else {
+        merged = mergeSnapshots(local, remote);
+        const applied = await applyLocal(merged, local);
+        if (applied.changedData || applied.changedSettings) afterApply(applied);
+      }
+      let written = remoteAt;
+      if (!remote || signature(merged) !== signature(remote)) {
+        const at = Math.max(Date.now(), (remoteAt || 0) + 1);
+        let w;
+        if (remoteAt === null) {
+          w = await sb.from(CONFIG.stateTable).insert({ user_id: user.id, data: merged, updated_at: at }).select('updated_at');
+          if (w.error?.code === '23505') w = { data: [] }; // başka cihaz az önce oluşturdu
+        } else {
+          w = await sb.from(CONFIG.stateTable).update({ data: merged, updated_at: at }).eq('user_id', user.id).eq('updated_at', remoteAt).select('updated_at');
+        }
+        if (w.error) throw w.error;
+        if (!w.data?.length) {
+          diag.conflicts++;
+          if (attempt >= 4) throw new Error('Başka bir cihaz aynı anda eşitliyor; biraz sonra yeniden denenecek.');
+          continue; // yeniden oku, birleştir, yaz
+        }
+        written = at;
+      }
+      remoteSeen = written || 0;
+      diag.cloud = { books: merged.books.length, highlights: merged.highlights.length, notes: merged.notes.length, at: remoteSeen };
+      break;
     }
-    const local = await localSnapshot();
-    let merged;
-    if (authoritative && remote) {
-      // Geri yükleme / tümünü silme: bu cihazdaki hâl esas alınır.
-      const now = nowISO();
-      const localIds = new Set([...local.books, ...local.highlights, ...local.notes].map(x => x.id));
-      const tombs = { ...local.tombstones };
-      for (const x of [...remote.books, ...remote.highlights, ...remote.notes]) if (!localIds.has(x.id)) tombs[x.id] = now;
-      const bump = list => list.map(x => ({ ...x, updatedAt: now }));
-      merged = { ...local, books: bump(local.books), highlights: bump(local.highlights), notes: bump(local.notes), tombstones: tombs };
-      await db.runTx(['books', 'highlights', 'notes'], 'readwrite', tx => {
-        merged.books.forEach(x => tx.objectStore('books').put(x));
-        merged.highlights.forEach(x => tx.objectStore('highlights').put(x));
-        merged.notes.forEach(x => tx.objectStore('notes').put(x));
-      });
-      await db.put('settings', { key: 'tombstones', value: tombs });
-      await loadState();
-    } else {
-      merged = mergeSnapshots(local, remote);
-      const applied = await applyLocal(merged, local);
-      if (applied.changedData || applied.changedSettings) afterApply(applied);
-    }
-    if (!remote || signature(merged) !== signature(remote)) {
-      const w = await sb.from(CONFIG.stateTable).upsert({ user_id: user.id, data: merged, updated_at: Date.now() });
-      if (w.error) throw w.error;
-    }
-    await db.setSetting('lastSyncAt', nowISO());
+    const now = nowISO();
+    await db.setSetting('lastSyncAt', now);
+    diag.lastOkAt = now; diag.lastError = '';
     setStatus('ok', 'Eşitlendi');
-    cloudBackup(merged).catch(() => {});
+    cloudBackup({ ...(await localSnapshot()) }).catch(() => {});
   } catch (e) {
     console.warn('Eşitleme hatası', e?.message || e);
+    diag.lastError = dbMessage(e); diag.lastErrorAt = nowISO();
     setStatus('error', dbMessage(e));
   } finally {
     syncing = false;
   }
 }
 
-const scheduleSync = debounce(() => syncNow(), 1500);
+/** Buluttaki sürüm değiştiyse (başka cihaz yazdıysa) eşitler. Yalnızca küçük bir alan okunur. */
+async function checkRemote() {
+  if (!sb || !user || syncing || navigator.onLine === false || document.visibilityState === 'hidden') return;
+  try {
+    const r = await sb.from(CONFIG.stateTable).select('updated_at').eq('user_id', user.id).maybeSingle();
+    if (r.error) return;
+    const at = r.data ? Number(r.data.updated_at) || 0 : 0;
+    if (at !== remoteSeen || pending) syncNow();
+  } catch { /* sessiz: bir sonraki kontrolde denenir */ }
+}
+
+let pending = false;
+const POLL_MS = 30000;
+const debounced = debounce(() => syncNow(), 1500);
+const scheduleSync = () => { pending = true; debounced(); };
 
 // ---------- Günlük bulut yedeği (API anahtarı hariç) ----------
 async function cloudBackup(snap) {
@@ -304,7 +347,15 @@ export async function initSync() {
   onKeyChange(() => { if (user) scheduleSync(); });
   window.addEventListener('online', () => user && syncNow());
   window.addEventListener('offline', () => user && setStatus('offline', 'Çevrimdışı · değişiklikler cihazda duruyor'));
-  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && user) syncNow(); });
+  document.addEventListener('visibilitychange', () => {
+    if (!user) return;
+    // Görünür olunca buluttan çek; arka plana geçerken bekleyen değişikliği hemen gönder (uygulama kapatılabilir)
+    if (document.visibilityState === 'visible' || pending) syncNow();
+  });
+  window.addEventListener('pagehide', () => { if (user && pending) syncNow(); });
+  window.addEventListener('focus', () => { if (user) checkRemote(); });
+  // Açık kalan sayfa (ör. bilgisayarda ya da Sefer içinde) başka cihazın değişikliklerini kaçırmasın
+  setInterval(checkRemote, POLL_MS);
 
   sb.auth.onAuthStateChange((ev, session) => {
     if (ev === 'PASSWORD_RECOVERY') setTimeout(() => recoveryHandler(), 0);
