@@ -5,6 +5,7 @@ import { markLabel, statusLabel } from './database.js';
 import { bookById, toggleFavorite, deleteHighlight } from './store.js';
 import { refresh } from './router.js';
 import { renderRich, relatedOf, linkChip } from './links.js';
+import { openShareDialog } from './share.js';
 
 export function button(label, { icon: ic, onClick, variant = 'secondary', small = false, type = 'button', title, disabled, href, attrs = {} } = {}) {
   const cls = `btn btn-${variant}${small ? ' btn-small' : ''}`;
@@ -95,6 +96,7 @@ export function highlightCard(h, { showBook = false, onEdit } = {}) {
         iconButton('star', h.favorite ? 'Favorilerden çıkar' : 'Favorilere ekle', async () => {
           await toggleFavorite(h.id); refresh();
         }, { pressed: h.favorite, filled: h.favorite }),
+        iconButton('share', 'Alıntı kartı olarak paylaş', () => openShareDialog(h)),
         iconButton('copy', 'Panoya kopyala', async () => {
           const src = bookById(h.bookId);
           const text = `“${h.text}”\n— ${src?.author || ''}, ${src?.title || ''}${h.page ? ', s. ' + h.page : ''}`;

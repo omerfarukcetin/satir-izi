@@ -418,6 +418,29 @@ dialog .sticky-actions { bottom: 0; background: var(--surface); padding: .6rem 0
 .suggest-item .chips { padding-bottom: 0; margin-top: .4rem; flex-wrap: wrap; }
 .new-tag { font-style: normal; font-size: .7rem; opacity: .75; }
 
+/* ---------- Alıntı kartı ---------- */
+.share-preview { display: grid; place-items: center; background: var(--surface-2); border-radius: 14px; padding: .6rem; margin-bottom: .8rem; }
+.share-canvas { display: block; max-width: 100%; max-height: 52vh; width: auto; height: auto; border-radius: 8px; box-shadow: 0 6px 24px rgb(0 0 0 / 18%); }
+
+/* ---------- Arşivle sohbet ---------- */
+.hero-ask { display: flex; align-items: center; gap: .5rem; margin-top: .8rem; padding: .7rem .9rem; border-radius: 12px; background: var(--surface); color: var(--muted); text-decoration: none; font-size: var(--t-body); border: 1px solid var(--line); }
+.ask-examples { margin: .5rem 0 1rem; }
+.ask-list { display: grid; gap: 1.1rem; margin: .5rem 0 1rem; }
+.ask-q { justify-self: end; margin-left: auto; max-width: 85%; background: var(--green); color: var(--on-green); padding: .6rem .85rem; border-radius: 14px 14px 4px 14px; font-weight: 600; width: fit-content; white-space: pre-wrap; }
+.ask-turn { display: grid; gap: .5rem; }
+.ask-a { background: var(--surface); border: 1px solid var(--line); border-radius: 14px 14px 14px 4px; padding: .8rem .95rem; font-size: var(--t-item); line-height: 1.6; }
+.ask-a p { margin: 0 0 .6rem; }
+.ask-error { color: var(--danger); border-color: var(--danger); }
+.ask-ref { color: var(--green); font-weight: 800; font-size: .72em; cursor: help; }
+.ask-sources { display: grid; gap: .4rem; margin-top: .6rem; border-top: 1px solid var(--line); padding-top: .6rem; }
+.ask-source { display: flex; gap: .6rem; align-items: flex-start; text-decoration: none; color: var(--ink); background: var(--surface-2); border-radius: 10px; padding: .5rem .6rem; font-size: var(--t-body); }
+.ask-num { flex: none; width: 1.5rem; height: 1.5rem; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: var(--on-green); font-size: var(--t-tiny); font-weight: 800; }
+.ask-src-body { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.ask-src-text { overflow-wrap: anywhere; }
+.ask-src-note { color: var(--earth); font-size: var(--t-meta); }
+.ask-input { display: flex; gap: .5rem; align-items: flex-end; background: var(--bg); padding: .4rem 0; }
+.ask-input textarea { min-height: 48px; }
+
 /* ---------- Kitap raporu ---------- */
 .report-head { margin-top: 0; flex-wrap: wrap; }
 .report h3 { margin: 1.1rem 0 .4rem; color: var(--green); font-size: var(--t-meta); text-transform: uppercase; letter-spacing: .08em; }

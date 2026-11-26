@@ -31,7 +31,8 @@ export async function homeView() {
     el('h1', {}, 'Okudukların kaybolmasın.'),
     el('div', { class: 'hero-actions' },
       button('Sayfa tara', { icon: 'camera', variant: 'primary', href: '#/tara' }),
-      button('Kitap ekle', { icon: 'plus', onClick: addBook })));
+      button('Kitap ekle', { icon: 'plus', onClick: addBook })),
+    state.highlights.length + state.notes.length ? el('a', { class: 'hero-ask', href: '#/sor' }, icon('chat', { size: 18 }), 'Arşivine sor: “Sabır hakkında ne not almıştım?”') : null);
 
   // Yedek hatırlatması
   let reminder = null;

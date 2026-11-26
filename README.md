@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v3.0.0)
+## Özellikler (v3.1.0)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -69,6 +69,15 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
   özet, temalar (sayfalarıyla), öne çıkan alıntılar, düşüncelerin ve düşünmek için sorular. Dışarıdan bilgi eklenmez;
   öne çıkan alıntılar kayıtlı alıntılarla harfiyen eşleşmeyen her şey atılır, olmayan sayfa numaraları silinir.
   Rapor kitapla saklanır/eşitlenir, Markdown dışa aktarıma girer; yeni alıntı eklenince “Yenile” uyarısı çıkar.
+- **Arşivine sor** (Alıntılarım → “Arşivine sor” veya ana sayfa): “Sabır hakkında hangi kitaplarda ne not almıştım?” gibi
+  sorular yalnızca senin alıntı ve notlarından yanıtlanır. Önce cihazda soruyla ilgili kayıtlar bulunur (arşiv küçükse
+  hepsi gönderilir, ~45 bin karakter sınırı); Gemini her paragraf için dayandığı kayıtları belirtmek zorundadır.
+  Kaynağı olmayan ya da kayıtlarda geçmeyen tırnaklı alıntı içeren paragraflar atılır ve bu ekranda belirtilir.
+  Kaynaklar senin kayıtlı metninle, kitaba giden kartlar olarak gösterilir. Her soru 1 istek; sohbet cihazda saklanmaz
+  (sayfa yenilenince silinir), takip sorularında son iki soru-cevap bağlam olarak gider.
+- **Alıntı kartı:** her alıntıdaki paylaş düğmesi alıntıyı kitap adı, yazar ve sayfayla görsel karta çevirir.
+  Biçim: gönderi 4:5, hikâye 9:16, kare; tema: Gece, Gündüz, Kâğıt. Telefonda paylaş menüsü açılır (WhatsApp,
+  Instagram…); desteklemeyen tarayıcıda PNG indirilir. Kart cihazda çizilir, internet gerekmez.
 - **Ana sayfa:** kitap / okunan / tamamlanan / alıntı / not sayıları, okunmakta olan kitaplar, son alıntılar,
   rastgele eski bir alıntı, bekleyen taramalar, yedek hatırlatması.
 - **Ayarlar:** Gemini anahtarı ve model kimliği, bağlantı testi, tarama çözünürlüğü, açık/koyu tema,
@@ -221,6 +230,10 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 3.1.0
+- Arşivine sor: kaynak gösteren, doğrulamalı soru-cevap.
+- Alıntı kartı paylaşımı (4:5 / 9:16 / kare, 3 tema).
 
 ### 3.0.0
 - Kitap raporu (yapay zekâ, yalnızca kullanıcının kayıtlarından, doğrulamalı).

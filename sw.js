@@ -2,7 +2,7 @@
 // Her yayında CACHE_VERSION değerini artırın; tarayıcı yeni dosyaları indirir ve kullanıcıya
 // "Yeni sürüm hazır" bildirimi gösterilir. Yalnızca uygulamanın kendi statik dosyaları önbelleğe alınır.
 // Gemini istekleri (farklı alan adı) ve API anahtarı hiçbir zaman önbelleğe girmez.
-const CACHE_VERSION = '3.0.0';
+const CACHE_VERSION = '3.1.0';
 const CACHE = `satir-izi-${CACHE_VERSION}`;
 const ASSETS = [
   './',
@@ -11,6 +11,7 @@ const ASSETS = [
   './css/style.css',
   './js/app.js',
   './js/account.js',
+  './js/ask.js',
   './js/config.js',
   './js/sync.js',
   './js/tags.js',
@@ -35,6 +36,7 @@ const ASSETS = [
   './js/scan.js',
   './js/scanner.js',
   './js/settings.js',
+  './js/share.js',
   './js/stats.js',
   './js/store.js',
   './js/ui.js',
