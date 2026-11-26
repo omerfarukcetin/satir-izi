@@ -24,8 +24,7 @@ export async function homeView() {
     stat(state.books.length, 'Kitap', '#/kitaplar'),
     stat(reading.length, 'Okunuyor', '#/kitaplar'),
     stat(done.length, 'Tamamlandı', '#/kitaplar'),
-    stat(state.highlights.length, 'Alıntı', '#/alintilar'),
-    stat(state.notes.length + state.highlights.filter(h => h.comment?.trim()).length, 'Kişisel not'));
+    stat(state.highlights.length, 'Alıntı', '#/alintilar'));
 
   const hero = el('div', { class: 'hero' },
     el('p', { class: 'eyebrow' }, 'Satır İzi'),

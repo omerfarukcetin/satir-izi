@@ -11,6 +11,7 @@ import { extractBookInfo, extractBookFromUrl, hasApiKey, slugHint } from './gemi
 import { openHighlightEditor } from './highlights.js';
 import { exportBook } from './export.js';
 import { pendingCallout } from './review.js';
+import { reportSection } from './report.js';
 import { tagInput } from './tags.js';
 import { renderRich, backlinksToBook, linkChip, wikiButton, relatedEditor, syncBacklinks } from './links.js';
 import { relatedBlock } from './ui.js';
@@ -408,7 +409,7 @@ export function bookDetailView({ parts }) {
 
   return el('section', {},
     el('a', { class: 'back-link', href: '#/kitaplar' }, icon('back', { size: 18 }), 'Kitaplarım'),
-    info, seferBox, actions, draftBox, review, notesSection, backSection,
+    info, seferBox, actions, draftBox, review, reportSection(book), notesSection, backSection,
     el('div', { class: 'section-head' }, el('h2', {}, `Alıntılar (${hls.length})`), hls.length > 1 ? sortSel : null),
     hls.length ? el('div', { class: 'hl-list' }, sorted.map(h => highlightCard(h, { onEdit: edit })))
       : emptyState('Henüz alıntı yok. Altını çizdiğin bir sayfanın fotoğrafını tara veya elle ekle.'));

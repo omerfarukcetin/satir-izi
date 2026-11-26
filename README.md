@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v2.9.0)
+## Özellikler (v3.0.0)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -65,6 +65,10 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
   büyük/küçük harf, tire ve boşluk farkı aynı etiket sayılır).
 - **Yapay zekâ ile etiket önerisi:** alıntı düzenlerken “Etiket öner”; Etiketler sayfasında etiketsiz alıntılar 20’şerli
   tek istekte incelenir. Mevcut etiketler önceliklidir; öneriler onaylanmadan kaydedilmez.
+- **Kitap raporu:** kitap sayfasında “Rapor oluştur”: yalnızca o kitaptaki alıntılarından, notlarından ve değerlendirmenden
+  özet, temalar (sayfalarıyla), öne çıkan alıntılar, düşüncelerin ve düşünmek için sorular. Dışarıdan bilgi eklenmez;
+  öne çıkan alıntılar kayıtlı alıntılarla harfiyen eşleşmeyen her şey atılır, olmayan sayfa numaraları silinir.
+  Rapor kitapla saklanır/eşitlenir, Markdown dışa aktarıma girer; yeni alıntı eklenince “Yenile” uyarısı çıkar.
 - **Ana sayfa:** kitap / okunan / tamamlanan / alıntı / not sayıları, okunmakta olan kitaplar, son alıntılar,
   rastgele eski bir alıntı, bekleyen taramalar, yedek hatırlatması.
 - **Ayarlar:** Gemini anahtarı ve model kimliği, bağlantı testi, tarama çözünürlüğü, açık/koyu tema,
@@ -217,6 +221,11 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 3.0.0
+- Kitap raporu (yapay zekâ, yalnızca kullanıcının kayıtlarından, doğrulamalı).
+- Yazı ölçeği Sefer ile aynı (24/17/15/14/13 px; masaüstünde biraz büyük).
+- Ana sayfadan “Kişisel not” sayısı kaldırıldı.
 
 ### 2.9.0
 - Bağlantıdan doldururken sayfadaki kapak görseli de alınır; katalog adla aramasında da kapak gelir.

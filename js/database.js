@@ -68,8 +68,27 @@ export function makeBook(p = {}, now = nowISO()) {
       task: str(p.sefer.task, 120), goal: numOrNull(p.sefer.goal) || 0,
       due: dateOnly(p.sefer.due), streak: numOrNull(p.sefer.streak) || 0, at: isoOr(p.sefer.at, now),
     } : null,
+    // Yapay zekâ kitap raporu (yalnızca kitabın kendi alıntı ve notlarından)
+    report: sanitizeReport(p.report),
     createdAt: isoOr(p.createdAt, now),
     updatedAt: isoOr(p.updatedAt, now),
+  };
+}
+
+function sanitizeReport(r) {
+  if (!r || typeof r !== 'object' || !r.data || typeof r.data !== 'object') return null;
+  const d = r.data, arr = (v, n) => (Array.isArray(v) ? v.slice(0, n) : []);
+  return {
+    createdAt: isoOr(r.createdAt, nowISO()),
+    model: str(r.model, 80),
+    basedOn: { highlights: numOrNull(r.basedOn?.highlights) || 0, notes: numOrNull(r.basedOn?.notes) || 0, sig: str(r.basedOn?.sig, 80) },
+    data: {
+      summary: str(d.summary, 3000),
+      themes: arr(d.themes, 8).map(t => ({ title: str(t?.title, 120), text: str(t?.text, 1200), pages: strList(t?.pages).slice(0, 12) })).filter(t => t.title),
+      quotes: arr(d.quotes, 6).map(q => ({ text: str(q?.text, 2000), page: str(q?.page, 30), why: str(q?.why, 600) })).filter(q => q.text),
+      thoughts: arr(d.thoughts, 8).map(x => str(x, 800)).filter(Boolean),
+      questions: arr(d.questions, 5).map(x => str(x, 400)).filter(Boolean),
+    },
   };
 }
 

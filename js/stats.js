@@ -130,6 +130,6 @@ export function yearSummaryCard() {
   if (!s.finished.length && !s.quotes) return null;
   return el('a', { class: 'card summary-card', href: '#/istatistik' },
     el('div', {}, el('span', { class: 'eyebrow' }, `${y} özeti`),
-      el('p', {}, el('strong', {}, `${fmt(s.finished.length)} kitap`), ` · ${fmt(s.pages)} sayfa · ${fmt(s.quotes)} alıntı · ${fmt(s.notes)} not`)),
+      el('p', {}, el('strong', {}, `${fmt(s.finished.length)} kitap`), ` · ${fmt(s.pages)} sayfa · ${fmt(s.quotes)} alıntı`)),
     icon('chevron', { size: 20 }));
 }

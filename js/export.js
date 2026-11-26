@@ -4,6 +4,7 @@ import { comparePage, compareTr, download, slugify, formatDate } from './utils.j
 import { statusLabel, markLabel } from './database.js';
 import { relatedOf } from './links.js';
 import { bookById } from './store.js';
+import { reportToMarkdown } from './report.js';
 
 const sortedHighlights = bookId => highlightsOf(bookId).sort((a, b) => comparePage(a.page, b.page) || a.createdAt.localeCompare(b.createdAt));
 const tagify = t => '#' + t.trim().replace(/\s+/g, '-').replace(/[#,]/g, '');
@@ -28,6 +29,7 @@ export function bookToMarkdown(book) {
   if (book.rating) lines.push(`Puan: ${'★'.repeat(book.rating)}${'☆'.repeat(5 - book.rating)}`);
   lines.push('');
   if (book.review?.trim()) lines.push('## Değerlendirme', '', book.review.trim(), '');
+  if (book.report?.data) lines.push(reportToMarkdown(book.report), '');
   const notes = notesOf(book.id).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   if (notes.length) {
     lines.push('## Kişisel notlar', '');
