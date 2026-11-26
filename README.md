@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v3.1.0)
+## Özellikler (v3.2.0)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -78,6 +78,9 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 - **Alıntı kartı:** her alıntıdaki paylaş düğmesi alıntıyı kitap adı, yazar ve sayfayla görsel karta çevirir.
   Biçim: gönderi 4:5, hikâye 9:16, kare; tema: Gece, Gündüz, Kâğıt. Telefonda paylaş menüsü açılır (WhatsApp,
   Instagram…); desteklemeyen tarayıcıda PNG indirilir. Kart cihazda çizilir, internet gerekmez.
+  Kitabın kapağı varsa “Kitap kapağı: Ekle / Ekleme” seçeneği çıkar; eklenince kapak, kitap adı ve yazarın solunda
+  gölgeli bir kitap olarak durur (hikâye biçiminde daha büyük). Kapak, izin vermeyen bir siteden bağlantı olarak
+  kaydedilmişse karta eklenemez; bu durumda uyarı gösterilir ve kart kapaksız hazırlanır.
 - **Ana sayfa:** kitap / okunan / tamamlanan / alıntı / not sayıları, okunmakta olan kitaplar, son alıntılar,
   rastgele eski bir alıntı, bekleyen taramalar, yedek hatırlatması.
 - **Ayarlar:** Gemini anahtarı ve model kimliği, bağlantı testi, tarama çözünürlüğü, açık/koyu tema,
@@ -230,6 +233,9 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 3.2.0
+- Alıntı kartına kitap kapağı ekleme seçeneği.
 
 ### 3.1.0
 - Arşivine sor: kaynak gösteren, doğrulamalı soru-cevap.
