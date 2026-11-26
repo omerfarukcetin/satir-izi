@@ -176,11 +176,39 @@ export function openBookForm(book = null, { past = false } = {}) {
 
     const coverPreview = el('div', { class: 'cover-edit' });
     const coverInput = el('input', { type: 'file', accept: 'image/*', hidden: true });
+    // Kapak bağlantısı (görselin kendi adresi)
+    const coverUrlIn = el('input', { type: 'url', inputmode: 'url', placeholder: 'Kapak görselinin bağlantısı (https://…jpg)', 'aria-label': 'Kapak görselinin bağlantısı' });
+    const coverUrlMsg = el('p', { class: 'muted small', role: 'status' });
+    const coverUrlBtn = button('Ekle', { icon: 'download', small: true, onClick: () => coverFromUrl() });
+    const coverUrlRow = el('div', { class: 'cover-url', hidden: true }, el('div', { class: 'isbn-row' }, coverUrlIn, coverUrlBtn), coverUrlMsg,
+      el('p', { class: 'muted small' }, 'İpucu: tarayıcıda kapağa uzun basıp (veya sağ tıklayıp) “Resim adresini kopyala”yı seç. Kitap sayfasının bağlantısı için yukarıdaki “Otomatik doldur”u kullan.'));
+    let coverBusy = false;
+    async function coverFromUrl() {
+      let raw = coverUrlIn.value.trim();
+      if (!raw) { coverUrlMsg.textContent = 'Önce bir bağlantı yapıştır.'; return; }
+      if (/^http:\/\//i.test(raw)) raw = 'https://' + raw.slice(7);
+      if (!/^https:\/\/[^\s"'<>]{4,1000}$/.test(raw)) { coverUrlMsg.textContent = 'Geçerli bir https bağlantısı gir.'; return; }
+      if (navigator.onLine === false) { coverUrlMsg.textContent = 'Kapağı bağlantıdan almak için internet gerekiyor.'; return; }
+      if (coverBusy) return;
+      coverBusy = true; coverUrlBtn.disabled = true; coverUrlMsg.textContent = 'Kapak alınıyor…';
+      try {
+        const c = await resolveRemoteCover(raw, { strict: false });
+        if (!c) { coverUrlMsg.textContent = 'Bu bağlantıda bir görsel bulunamadı. Bağlantının bir sayfa değil, doğrudan resim olduğundan emin ol.'; return; }
+        coverData = c; drawCover();
+        coverUrlIn.value = '';
+        coverUrlMsg.textContent = c.startsWith('data:') ? 'Kapak eklendi ve cihaza kaydedildi.' : 'Kapak eklendi. Site indirmeye izin vermediği için bağlantı olarak saklandı: internet yokken görünmeyebilir ve alıntı kartına eklenemez.';
+      } finally { coverBusy = false; coverUrlBtn.disabled = false; }
+    }
+    coverUrlIn.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); coverFromUrl(); } });
+    coverUrlIn.addEventListener('paste', () => setTimeout(() => { if (/^https?:\/\//i.test(coverUrlIn.value.trim())) coverFromUrl(); }, 0));
     const drawCover = () => coverPreview.replaceChildren(
       cover({ title: f.title.value || '?', cover: coverData }, 'md'),
-      el('div', { class: 'row-actions' },
-        button(coverData ? 'Kapağı değiştir' : 'Kapak ekle', { icon: 'image', small: true, onClick: () => coverInput.click() }),
-        coverData ? button('Kaldır', { small: true, variant: 'ghost', onClick: () => { coverData = ''; drawCover(); } }) : null));
+      el('div', { class: 'cover-tools' },
+        el('div', { class: 'row-actions' },
+          button(coverData ? 'Kapağı değiştir' : 'Kapak ekle', { icon: 'image', small: true, onClick: () => coverInput.click() }),
+          button('Bağlantıdan', { icon: 'link', small: true, variant: 'ghost', attrs: { 'aria-expanded': String(!coverUrlRow.hidden) }, onClick: e => { coverUrlRow.hidden = !coverUrlRow.hidden; e.currentTarget.setAttribute('aria-expanded', String(!coverUrlRow.hidden)); if (!coverUrlRow.hidden) coverUrlIn.focus(); } }),
+          coverData ? button('Kaldır', { small: true, variant: 'ghost', onClick: () => { coverData = ''; drawCover(); } }) : null),
+        coverUrlRow));
     coverInput.onchange = async () => {
       const file = coverInput.files[0]; coverInput.value = '';
       if (!file) return;

@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v3.2.0)
+## Özellikler (v3.2.1)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -75,6 +75,10 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
   Kaynağı olmayan ya da kayıtlarda geçmeyen tırnaklı alıntı içeren paragraflar atılır ve bu ekranda belirtilir.
   Kaynaklar senin kayıtlı metninle, kitaba giden kartlar olarak gösterilir. Her soru 1 istek; sohbet cihazda saklanmaz
   (sayfa yenilenince silinir), takip sorularında son iki soru-cevap bağlam olarak gider.
+- **Kapak bağlantısı:** kitap formunda kapağın yanındaki “Bağlantıdan” ile kapak görselinin adresi yapıştırılabilir
+  (tarayıcıda “Resim adresini kopyala”). Site izin veriyorsa görsel küçültülüp cihaza kopyalanır; izin vermiyorsa
+  adres yalnızca gerçekten bir resimse bağlantı olarak saklanır (çevrimdışı görünmeyebilir, alıntı kartına eklenemez).
+  Resim olmayan sayfa bağlantıları reddedilir; kitap sayfası bağlantısı için “Otomatik doldur” kullanılır.
 - **Alıntı kartı:** her alıntıdaki paylaş düğmesi alıntıyı kitap adı, yazar ve sayfayla görsel karta çevirir.
   Biçim: gönderi 4:5, hikâye 9:16, kare; tema: Gece, Gündüz, Kâğıt. Telefonda paylaş menüsü açılır (WhatsApp,
   Instagram…); desteklemeyen tarayıcıda PNG indirilir. Kart cihazda çizilir, internet gerekmez.
@@ -233,6 +237,9 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 3.2.1
+- Kapak görselini bağlantıdan ekleme.
 
 ### 3.2.0
 - Alıntı kartına kitap kapağı ekleme seçeneği.

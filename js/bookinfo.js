@@ -66,17 +66,38 @@ async function fromOpenLibrary(isbn, signal) {
  * Bağlantıdan gelen kapak adresi: önce cihaza kopyalamayı dener (izin verilirse),
  * olmazsa adresin gerçekten bir resim olduğunu doğrulayıp adresi döner. Resim değilse null.
  */
-export async function resolveRemoteCover(url, { signal } = {}) {
+export async function resolveRemoteCover(url, { signal, strict = true } = {}) {
   if (!/^https:\/\//.test(url || '')) return null;
-  const copy = await fetchCover(url, signal);
+  const copy = (await fetchCover(url, signal)) || (await imageCopy(url));
   if (copy) return copy;
   return new Promise(resolve => {
     const img = new Image();
     img.referrerPolicy = 'no-referrer';
     const done = v => { clearTimeout(t); resolve(v); };
     const t = setTimeout(() => done(null), LOOKUP_TIMEOUT);
-    img.onload = () => done(img.naturalWidth >= 60 && img.naturalHeight >= 80 && img.naturalHeight >= img.naturalWidth * 0.9 ? url : null);
+    img.onload = () => done(img.naturalWidth >= 60 && img.naturalHeight >= 80 && (!strict || img.naturalHeight >= img.naturalWidth * 0.9) ? url : null);
     img.onerror = () => done(null);
+    img.src = url;
+  });
+}
+
+/** Site CORS izni veriyorsa görseli <img> üzerinden cihaza kopyalar (fetch'in açamadığı adresler için). */
+function imageCopy(url) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous'; img.referrerPolicy = 'no-referrer';
+    const done = v => { clearTimeout(t); resolve(v); };
+    const t = setTimeout(() => done(null), LOOKUP_TIMEOUT);
+    img.onerror = () => done(null);
+    img.onload = async () => {
+      try {
+        if (img.naturalWidth < 40 || img.naturalHeight < 60) return done(null);
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth; c.height = img.naturalHeight;
+        c.getContext('2d').drawImage(img, 0, 0);
+        done((await canvasToJpeg(c, 480, 0.82)).dataUrl);
+      } catch { done(null); }
+    };
     img.src = url;
   });
 }
