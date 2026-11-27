@@ -5,7 +5,7 @@ import { icon } from './icons.js';
 import { state, bookById } from './store.js';
 
 const WIKI = /\[\[([^\[\]\n]{1,200})\]\]/g;
-const TAG = /(^|[\s(])#([\p{L}\p{N}_-]{2,40})/gu;
+const TAG = /(^|[\s(])#([\p{L}\p{N}_-]{2,40}(?:\/[\p{L}\p{N}_-]{1,40}){0,3})/gu;
 
 /** [[Hedef|görünen ad]] → { target, label } */
 function parseWiki(inner) {

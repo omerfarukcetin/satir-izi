@@ -123,7 +123,7 @@ export function highlightsView({ params } = {}) {
   favBtn.onclick = () => { hlState.fav = !hlState.fav; favBtn.setAttribute('aria-pressed', String(hlState.fav)); draw(); };
   draw();
   return el('section', {},
-    pageHeader('Alıntılarım', { actions: [button('Arşivine sor', { icon: 'chat', small: true, variant: 'primary', href: '#/sor' }), button('Etiketler', { icon: 'note', small: true, href: '#/etiketler' })] }),
+    pageHeader('Alıntılarım', { actions: [button('Arşivine sor', { icon: 'chat', small: true, variant: 'primary', href: '#/sor' }), button('Etiketler', { icon: 'note', small: true, href: '#/etiketler' }), button('Harita', { icon: 'graph', small: true, href: '#/harita' })] }),
     hlState.tag ? el('div', { class: 'active-filter' }, el('span', {}, 'Etiket: ', el('strong', {}, '#' + hlState.tag)),
       button('Filtreyi kaldır', { small: true, variant: 'ghost', icon: 'x', onClick: () => { hlState.tag = ''; location.hash = '#/alintilar'; } })) : null,
     el('div', { class: 'toolbar' }, el('div', { class: 'search' }, icon('search', { size: 18 }), search)),

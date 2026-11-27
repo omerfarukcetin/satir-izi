@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v3.2.2)
+## Özellikler (v3.3.0)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -69,6 +69,16 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
   özet, temalar (sayfalarıyla), öne çıkan alıntılar, düşüncelerin ve düşünmek için sorular. Dışarıdan bilgi eklenmez;
   öne çıkan alıntılar kayıtlı alıntılarla harfiyen eşleşmeyen her şey atılır, olmayan sayfa numaraları silinir.
   Rapor kitapla saklanır/eşitlenir, Markdown dışa aktarıma girer; yeni alıntı eklenince “Yenile” uyarısı çıkar.
+- **Bağlantı haritası** (Alıntılarım → Harita, Etiketler → Harita): etiketler (turkuaz daire) ve kitaplar (safran
+  dikdörtgen) ile aralarındaki bağlar. Bağlar: aynı alıntıda birlikte kullanılan etiketler, kitapta geçen etiketler,
+  alt etiketler (kesikli çizgi) ve [[Kitap]] ya da ilgili alıntı bağlantılarıyla kitaplar arası bağ. Düğüme dokununca
+  komşuları öne çıkar, panelde birlikte kullanılan etiketler, kitaplar, “Alıntıları gör” ve “Arşivine sor” (soru
+  hazırlanır, gönderilmez) çıkar. **Konular** etiketlerin birlikte kullanımından cihazda kendiliğinden çıkarılır
+  (yapay zekâ kullanılmaz). Sürükleyerek gezme, iki parmak/tekerlekle yakınlaştırma, arama, kitapları gizleme ve
+  ekran okuyucular için **Liste** görünümü vardır. En çok 150 etiket ve 120 kitap gösterilir.
+- **Alt etiketler:** `felsefe/stoacılık` gibi eğik çizgiyle yazılır (notta `#felsefe/stoacılık`). Etiketler ekranında
+  üst etiketin altında girintili listelenir; yazılmamış üst etiket alt etiketlerinin toplamı olarak görünür.
+  Üst etiketle filtrelemek alt etiketlerin alıntılarını da getirir.
 - **Arşivine sor** (Alıntılarım → “Arşivine sor” veya ana sayfa): “Sabır hakkında hangi kitaplarda ne not almıştım?” gibi
   sorular yalnızca senin alıntı ve notlarından yanıtlanır. Önce cihazda soruyla ilgili kayıtlar bulunur (arşiv küçükse
   hepsi gönderilir, ~45 bin karakter sınırı); Gemini her paragraf için dayandığı kayıtları belirtmek zorundadır.
@@ -237,6 +247,10 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 3.3.0
+- Bağlantı haritası ve kendiliğinden çıkan konu kümeleri.
+- Alt etiketler (felsefe/stoacılık).
 
 ### 3.2.2
 - Eşitleme düzeltmeleri: iki cihaz aynı anda yazdığında birinin değişikliği kaybolabiliyordu; artık yazma yalnızca

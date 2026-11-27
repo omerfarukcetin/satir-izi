@@ -86,7 +86,7 @@ function renderAnswer(turn) {
     el('p', { class: 'muted small' }, `${turn.considered} kayıt incelendi${result.dropped ? ` · kaynağı doğrulanamayan ${result.dropped} paragraf çıkarıldı` : ''} · yalnızca senin kayıtların`));
 }
 
-export function askView() {
+export function askView({ params } = {}) {
   const total = state.highlights.length + state.notes.length;
   const canAI = hasApiKey() && isOnline();
   const list = el('div', { class: 'ask-list', 'aria-live': 'polite' });
@@ -95,6 +95,7 @@ export function askView() {
     list.replaceChildren(...conv.turns.map(t => el('div', { class: 'ask-turn' }, el('div', { class: 'ask-q' }, t.q), renderAnswer(t))));
   };
   const input = el('textarea', { rows: 2, maxlength: 500, placeholder: 'Ör. Sabır hakkında hangi kitaplarda ne not almıştım?', 'aria-label': 'Sorun' });
+  if (params?.get('q')) input.value = params.get('q').slice(0, 500); // haritadan gelen hazır soru (gönderilmez, kullanıcı onaylar)
   const send = button('Sor', { icon: 'send', variant: 'primary', disabled: !canAI || !total });
   const ask = async q => {
     q = (q || '').trim();

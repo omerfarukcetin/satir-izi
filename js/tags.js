@@ -11,27 +11,37 @@ import { suggestTags, hasApiKey } from './gemini.js';
 export const PRESET_TAGS = ['ahlak', 'psikoloji', 'eğitim', 'tarih', 'din', 'kişisel gelişim', 'ekonomi', 'aile', 'çocuk yetiştirme', 'bilim ve teknoloji'];
 
 // Etiket karşılaştırma anahtarı: büyük/küçük harf, tire, alt çizgi ve boşluk farkı yok sayılır (#zihin-dünyası = zihin dünyası)
-export const tagKey = t => normalizeText(String(t || '').replace(/^#/, '').replace(/[-_]+/g, ' '));
-const cleanTag = t => String(t || '').replace(/^#/, '').replace(/\s+/g, ' ').trim().slice(0, 40);
+// Kademeli etiket: "felsefe/stoacılık" → üst etiket "felsefe" (eğik çizgi çevresindeki boşluk yok sayılır)
+export const tagKey = t => normalizeText(String(t || '').replace(/^#/, '').replace(/[-_]+/g, ' ').replace(/\s*\/\s*/g, '/'));
+const cleanTag = t => String(t || '').replace(/^#/, '').replace(/\s+/g, ' ').replace(/\s*\/\s*/g, '/').replace(/\/{2,}/g, '/').replace(/^\/+|\/+$/g, '').trim().slice(0, 60);
+/** "a/b/c" → ["a", "a/b"] */
+export const tagParents = name => { const p = cleanTag(name).split('/'); return p.slice(0, -1).map((_, i) => p.slice(0, i + 1).join('/')); };
 
 /** Bütün etiketler ve kullanım sayıları (alıntı + not, metin içi #etiketler dahil) */
-export function tagCounts() {
+export function tagCounts({ withParents = false } = {}) {
   const map = new Map(); // anahtar: normalize → { name, count }
   const add = (t, id) => {
     const name = cleanTag(t); if (!name) return;
     const k = tagKey(name);
     const e = map.get(k) || { name, ids: new Set() };
     e.ids.add(id); map.set(k, e);
+    // Üst etiketler alt etiketlerin kayıtlarını da sayar (yazılmamış üst etiket "sanal" olarak eklenir)
+    if (withParents) for (const pn of tagParents(name)) {
+      const pk = tagKey(pn);
+      const pe = map.get(pk) || { name: pn, ids: new Set(), virtual: true };
+      pe.ids.add(id); map.set(pk, pe);
+    }
   };
   for (const h of state.highlights) { (h.tags || []).forEach(t => add(t, h.id)); inlineTags(h.comment).forEach(t => add(t, h.id)); }
   for (const n of state.notes) { (n.tags || []).forEach(t => add(t, n.id)); inlineTags(n.text).forEach(t => add(t, n.id)); }
-  return [...map.values()].map(e => ({ name: e.name, count: e.ids.size })).sort((a, b) => b.count - a.count || compareTr(a.name, b.name));
+  return [...map.values()].map(e => ({ name: e.name, count: e.ids.size, ...(withParents ? { virtual: !!e.virtual, ids: e.ids } : {}) })).sort((a, b) => b.count - a.count || compareTr(a.name, b.name));
 }
 
 /** Kayıt bu etikete sahip mi (alan veya metin içi) */
 export function hasTag(item, tag, textField) {
   const k = tagKey(cleanTag(tag));
-  return (item.tags || []).some(t => tagKey(t) === k) || inlineTags(item[textField]).some(t => tagKey(t) === k);
+  const m = t => { const x = tagKey(t); return x === k || x.startsWith(k + '/'); }; // alt etiketler de dahil
+  return (item.tags || []).some(m) || inlineTags(item[textField]).some(m);
 }
 
 /** Çipli etiket girişi. { root, get() } */
@@ -204,7 +214,18 @@ export async function suggestForOne({ text, comment, bookTitle }) {
 }
 
 export function tagsView() {
-  const list = tagCounts();
+  // Kademeli sıralama: üst etiket, hemen altında alt etiketleri
+  const flat = tagCounts({ withParents: true });
+  const roots = flat.filter(t => !tagParents(t.name).length);
+  const list = [];
+  const walk = (t, depth) => {
+    list.push({ ...t, depth });
+    const k = tagKey(t.name);
+    flat.filter(c => tagParents(c.name).slice(-1)[0] && tagKey(tagParents(c.name).slice(-1)[0]) === k)
+      .sort((a, b) => b.count - a.count || compareTr(a.name, b.name)).forEach(c => walk(c, depth + 1));
+  };
+  roots.forEach(r => walk(r, 0));
+  for (const t of flat) if (!list.some(x => x.name === t.name)) list.push({ ...t, depth: 0 }); // güvenlik
   const untagged = state.highlights.filter(isUntagged).length;
   const canAI = hasApiKey() && isOnline();
   const ai = untagged ? el('div', { class: 'callout callout-soft' }, icon('scan'),
@@ -212,12 +233,12 @@ export function tagsView() {
       el('p', { class: 'small' }, canAI ? 'Yapay zekâ mevcut etiketlerine bakarak öneri yapsın; sen onaylayınca kaydedilir.' : 'Yapay zekâ önerisi için internet ve Ayarlar’da Gemini anahtarı gerekli.'),
       button('Yapay zekâ ile etiketle', { small: true, variant: 'primary', icon: 'scan', disabled: !canAI, onClick: bulkSuggestFlow }))) : null;
   return el('section', {},
-    pageHeader('Etiketler', { back: '#/alintilar', subtitle: 'Alıntılarını ve notlarını konulara göre gez. Notlarda #etiket yazarak da etiketleyebilirsin.' }),
+    pageHeader('Etiketler', { back: '#/alintilar', subtitle: 'Alıntılarını ve notlarını konulara göre gez. Notlarda #etiket yazarak da etiketleyebilirsin. Alt etiket için eğik çizgi kullan: felsefe/stoacılık.', actions: [button('Harita', { icon: 'graph', small: true, href: '#/harita' })] }),
     ai,
     list.length
-      ? el('div', { class: 'tag-rows' }, list.map(t => el('div', { class: 'tag-row' },
-        el('a', { class: 'tag-pill', href: `#/alintilar?etiket=${encodeURIComponent(t.name)}` }, '#' + t.name, el('span', {}, String(t.count))),
-        el('div', { class: 'row-actions' },
+      ? el('div', { class: 'tag-rows' }, list.map(t => el('div', { class: 'tag-row' + (t.depth ? ' tag-row-child' : ''), 'data-depth': String(Math.min(t.depth, 3)) },
+        el('a', { class: 'tag-pill', href: `#/alintilar?etiket=${encodeURIComponent(t.name)}`, title: t.virtual ? 'Alt etiketlerin toplamı' : null }, '#' + (t.depth ? t.name.split('/').pop() : t.name), el('span', {}, String(t.count))),
+        t.virtual ? el('span', { class: 'muted small' }, 'alt etiketlerin toplamı') : el('div', { class: 'row-actions' },
           iconButton('edit', `#${t.name} etiketini yeniden adlandır`, () => renameFlow(t)),
           iconButton('merge', `#${t.name} etiketini başka etiketle birleştir`, () => mergeFlow(t, list)),
           iconButton('trash', `#${t.name} etiketini sil`, () => deleteFlow(t))))))
