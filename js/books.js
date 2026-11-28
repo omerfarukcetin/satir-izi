@@ -361,38 +361,40 @@ export function bookDetailView({ parts }) {
   const hls = highlightsOf(book.id);
   const notes = notesOf(book.id).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
-  const info = el('div', { class: 'book-hero' },
+  // Künye: kapak, ad, yazar, durum ve ilerleme; ayrıntılar tek satırlık soluk bir yazıda
+  const detailLine = [book.publisher, book.category, book.startDate ? `${formatDate(book.startDate)} başladı` : null, book.endDate ? `${formatDate(book.endDate)} bitti` : null].filter(Boolean).join(' · ');
+  const editBook = async () => { if (await openBookForm(book)) { toast('Kitap güncellendi.'); refresh(); } };
+  const info = el('div', { class: 'book-hero book-hero-slim' },
     cover(book, 'lg'),
     el('div', { class: 'book-hero-body' },
-      el('h1', {}, book.title),
+      el('div', { class: 'bh-title-row' }, el('h1', {}, book.title), iconButton('edit', 'Kitabı düzenle', editBook)),
       el('p', { class: 'book-author' }, book.author),
       el('div', { class: 'book-card-meta' }, statusChip(book.status), book.rating ? el('span', { class: 'rating', 'aria-label': `${book.rating} / 5 puan` }, '★'.repeat(book.rating) + '☆'.repeat(5 - book.rating)) : null),
       progressBar(book),
-      el('dl', { class: 'facts' },
-        fact('Alıntı', String(hls.length)),
-        fact('Not', String(notes.length)),
-        book.publisher ? fact('Yayınevi', book.publisher) : null,
-        book.category ? fact('Kategori', book.category) : null,
-        book.isbn ? fact('ISBN', book.isbn) : null,
-        book.startDate ? fact('Başlama', formatDate(book.startDate)) : null,
-        book.endDate ? fact('Bitirme', formatDate(book.endDate)) : null)));
+      detailLine ? el('p', { class: 'bh-details muted small' }, detailLine) : null));
 
-  const actions = el('div', { class: 'action-grid' },
-    button('Sayfa tara', { icon: 'camera', variant: 'primary', href: `#/tara?kitap=${encodeURIComponent(book.id)}` }),
-    button('Toplu tara', { icon: 'scan', href: `#/toplu?kitap=${encodeURIComponent(book.id)}` }),
-    button('Elle alıntı ekle', { icon: 'plus', onClick: async () => { if (await openHighlightEditor({ bookId: book.id })) refresh(); } }),
-    button('Toplu alıntı gir', { icon: 'quote', onClick: () => openBulkEntry(book) }),
-    button('Not ekle', { icon: 'note', onClick: () => openNoteEditor(book.id) }),
-    button('Dışa aktar', { icon: 'download', onClick: async () => {
+  // Eylemler: iki ana iş görünür, gerisi "Diğer" menüsünde
+  const more = async () => {
+    const v = await choiceDialog({ title: book.title, options: [
+      { value: 'batch', label: 'Toplu tara', description: 'Birden çok sayfanın fotoğrafını sırayla işle' },
+      { value: 'bulk', label: 'Toplu alıntı gir', description: 'Eski kitaplar için alıntıları elle, topluca yaz' },
+      { value: 'note', label: 'Not ekle', description: 'Kitaba bağlı kişisel not' },
+      { value: 'export', label: 'Dışa aktar', description: 'Markdown, düz metin veya tablo' },
+      { value: 'edit', label: 'Kitabı düzenle' },
+      { value: 'delete', label: 'Kitabı sil', description: `${hls.length} alıntı ve ${notes.length} notla birlikte`, danger: true },
+    ] });
+    if (v === 'batch') location.hash = `#/toplu?kitap=${encodeURIComponent(book.id)}`;
+    else if (v === 'bulk') openBulkEntry(book);
+    else if (v === 'note') openNoteEditor(book.id);
+    else if (v === 'edit') editBook();
+    else if (v === 'export') {
       const f = await choiceDialog({ title: 'Dışa aktar', message: `${book.title} için biçim seçin.`, options: [
         { value: 'md', label: 'Markdown (.md)', description: 'Obsidian ve not uygulamalarıyla uyumlu' },
         { value: 'txt', label: 'Düz metin (.txt)' },
         { value: 'csv', label: 'Tablo (.csv)', description: 'Excel / Google E-Tablolar' },
       ] });
       if (f) exportBook(book, f);
-    } }),
-    button('Düzenle', { icon: 'edit', onClick: async () => { if (await openBookForm(book)) { toast('Kitap güncellendi.'); refresh(); } } }),
-    button('Sil', { icon: 'trash', variant: 'ghost-danger', onClick: async () => {
+    } else if (v === 'delete') {
       const ok = await confirmDialog({
         title: 'Kitap silinsin mi?',
         message: `“${book.title}” ile birlikte ${hls.length} alıntı ve ${notes.length} not kalıcı olarak silinecek. Bu işlem geri alınamaz.`,
@@ -402,15 +404,20 @@ export function bookDetailView({ parts }) {
       await deleteBook(book.id);
       toast('Kitap silindi.');
       navigate('kitaplar');
-    } }));
+    }
+  };
+  const actions = el('div', { class: 'book-actions' },
+    button('Sayfa tara', { icon: 'camera', variant: 'primary', href: `#/tara?kitap=${encodeURIComponent(book.id)}` }),
+    button('Alıntı ekle', { icon: 'plus', onClick: async () => { if (await openHighlightEditor({ bookId: book.id })) refresh(); } }),
+    button('Diğer', { icon: 'more', variant: 'ghost', onClick: more, attrs: { 'aria-haspopup': 'dialog', 'aria-label': 'Diğer işlemler', title: 'Diğer işlemler' } }));
 
   const draftBox = pendingCallout(book.id);
   const seferBox = seferInfo(book);
 
   const review = book.review?.trim() ? el('section', { class: 'card' }, el('h2', {}, 'Değerlendirmem'), el('p', { class: 'prewrap' }, book.review)) : null;
 
-  const notesSection = notes.length ? el('section', {},
-    el('h2', {}, 'Kişisel notlar'),
+  const notesSection = notes.length ? el('section', { class: 'book-sec' },
+    el('div', { class: 'section-head' }, el('h2', {}, `Notlarım (${notes.length})`), button('Not ekle', { icon: 'plus', small: true, variant: 'ghost', onClick: () => openNoteEditor(book.id) })),
     notes.map(n => el('article', { class: 'note-card' },
       el('p', { class: 'prewrap' }, renderRich(n.text)),
       n.tags?.length ? el('div', { class: 'tags' }, n.tags.map(t => el('a', { class: 'tag', href: `#/alintilar?etiket=${encodeURIComponent(t)}` }, '#' + t))) : null,
@@ -428,7 +435,7 @@ export function bookDetailView({ parts }) {
     el('p', { class: 'muted small' }, 'Başka kitaplardaki notlarında [[' + book.title + ']] diye andığın yerler.'),
     el('div', { class: 'link-list' }, back.map(r => linkChip(r)))) : null;
 
-  const sortSel = select([{ value: 'page', label: 'Sayfaya göre' }, { value: 'new', label: 'Yeniden eskiye' }, { value: 'old', label: 'Eskiden yeniye' }], detailSort.by, { 'aria-label': 'Alıntı sıralaması' });
+  const sortSel = select([{ value: 'page', label: 'Sayfaya göre' }, { value: 'new', label: 'En yeni' }, { value: 'old', label: 'En eski' }], detailSort.by, { 'aria-label': 'Alıntı sıralaması', class: 'select-pill' });
   sortSel.onchange = () => { detailSort.by = sortSel.value; refresh(); };
   const sorted = [...hls].sort(detailSort.by === 'page'
     ? (a, b) => comparePage(a.page, b.page) || a.createdAt.localeCompare(b.createdAt)
@@ -437,10 +444,13 @@ export function bookDetailView({ parts }) {
 
   return el('section', {},
     el('a', { class: 'back-link', href: '#/kitaplar' }, icon('back', { size: 18 }), 'Kitaplarım'),
-    info, seferBox, actions, draftBox, review, reportSection(book), notesSection, backSection,
-    el('div', { class: 'section-head' }, el('h2', {}, `Alıntılar (${hls.length})`), hls.length > 1 ? sortSel : null),
-    hls.length ? el('div', { class: 'hl-list' }, sorted.map(h => highlightCard(h, { onEdit: edit })))
-      : emptyState('Henüz alıntı yok. Altını çizdiğin bir sayfanın fotoğrafını tara veya elle ekle.'));
+    info, seferBox, actions, draftBox, reportSection(book), review,
+    // Asıl içerik önce: alıntılar
+    el('section', { class: 'book-sec' },
+      el('div', { class: 'section-head' }, el('h2', {}, `Alıntılar (${hls.length})`), hls.length > 1 ? sortSel : null),
+      hls.length ? el('div', { class: 'hl-list' }, sorted.map(h => highlightCard(h, { onEdit: edit })))
+        : emptyState('Henüz alıntı yok. Altını çizdiğin bir sayfanın fotoğrafını tara veya elle ekle.')),
+    notesSection, backSection);
 }
 
 function seferInfo(book) {

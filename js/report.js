@@ -44,6 +44,7 @@ async function generate(book, btn) {
     const { data } = r;
     if (!data.summary && !data.themes.length) throw new Error('Rapor oluşturulamadı; model boş yanıt verdi. Tekrar dene.');
     await saveBook({ ...book, report: { createdAt: nowISO(), model: r.model, basedOn: { highlights: hs.length, notes: ns.length, sig: reportSig(book) }, data } });
+    reportOpen.add(book.id); // yeni hazırlanan rapor açık gösterilsin
     toast(r.sampled ? `Rapor hazır. Alıntılar çok olduğu için ${r.used} tanesi kullanıldı.` : 'Rapor hazır.');
     refresh();
   } catch (e) {
@@ -53,6 +54,9 @@ async function generate(book, btn) {
     if (label) label.textContent = old;
   }
 }
+
+// Açılan raporlar oturum boyunca açık kalır (sayfa yenilense de katlanmasın)
+const reportOpen = new Set();
 
 export function reportSection(book) {
   const hs = highlightsOf(book.id), ns = notesOf(book.id);
@@ -68,17 +72,23 @@ export function reportSection(book) {
     : total < MIN_ITEMS ? `Rapor için en az ${MIN_ITEMS} alıntı veya not gerekli (şu an ${total}).` : '';
 
   if (!r) {
-    return el('section', { class: 'card report report-empty' },
-      el('div', { class: 'section-head report-head' }, el('h2', {}, 'Kitap raporu'), genBtn),
-      el('p', { class: 'muted small' }, 'Bu kitaptan aldığın alıntılar ve notlarından kısa bir rapor: ana temalar, öne çıkan alıntılar, kendi düşüncelerin. Yalnızca senin kayıtların kullanılır; kitap hakkında dışarıdan bilgi eklenmez. 1 Gemini isteği.'),
-      hint ? el('p', { class: 'small warn-text' }, hint) : null);
+    // Rapor yokken tek satır: ne olduğu kısa, koşul eksikse neden yapılamadığı
+    genBtn.querySelector('span:last-child')?.replaceChildren('Oluştur');
+    genBtn.title = 'Alıntı ve notlarından kısa rapor: temalar, öne çıkan alıntılar, kendi düşüncelerin. Yalnızca senin kayıtların kullanılır. 1 Gemini isteği.';
+    return el('section', { class: 'report-slim' },
+      icon('note', { size: 18 }),
+      el('div', {}, el('strong', {}, 'Kitap raporu'), el('span', { class: 'muted small' }, hint || 'Alıntılarından ve notlarından kısa özet')),
+      genBtn);
   }
 
   const d = r.data;
   const stale = r.basedOn?.sig && r.basedOn.sig !== reportSig(book);
   const pageChips = pages => (pages.length ? el('span', { class: 'report-pages' }, 's. ' + pages.join(', ')) : null);
-  return el('section', { class: 'card report' },
-    el('div', { class: 'section-head report-head' }, el('h2', {}, 'Kitap raporu'),
+  const box = el('details', { class: 'card report report-fold', open: reportOpen.has(book.id) });
+  box.addEventListener('toggle', () => { if (box.open) reportOpen.add(book.id); else reportOpen.delete(book.id); });
+  box.append(el('summary', {}, el('span', {}, 'Kitap raporu'), el('span', { class: 'muted small' }, `${formatDate(r.createdAt)}${stale ? ' · güncel değil' : ''}`)));
+  box.append(...el('div', {}, el('section', { class: 'report-inner' },
+    el('div', { class: 'section-head report-head' }, el('span', {}),
       el('div', { class: 'row-actions' },
         el('button', { type: 'button', class: 'icon-btn icon-btn-ghost', title: 'Markdown olarak kopyala', 'aria-label': 'Raporu kopyala', onclick: async () => toast(await copyText(`# ${book.title}\n\n${reportToMarkdown(r)}`) ? 'Rapor kopyalandı.' : 'Kopyalanamadı.') }, icon('copy')),
         el('button', { type: 'button', class: 'icon-btn icon-btn-ghost', title: 'Raporu sil', 'aria-label': 'Raporu sil', onclick: async () => {
@@ -98,5 +108,6 @@ export function reportSection(book) {
         el('figcaption', { class: 'muted small' }, [q.page ? `s. ${q.page}` : null, q.why].filter(Boolean).join(' · '))))) : null,
     d.thoughts.length ? el('div', {}, el('h3', {}, 'Düşüncelerim'), el('ul', { class: 'report-list' }, d.thoughts.map(x => el('li', {}, x)))) : null,
     d.questions.length ? el('div', {}, el('h3', {}, 'Düşünmek için'), el('ul', { class: 'report-list' }, d.questions.map(x => el('li', {}, x)))) : null,
-    el('p', { class: 'muted small report-note' }, 'Yapay zekâ tarafından senin alıntı ve notlarından derlendi; öne çıkan alıntılar kayıtlarınla birebir eşleşenlerden seçildi.'));
+    el('p', { class: 'muted small report-note' }, 'Yapay zekâ tarafından senin alıntı ve notlarından derlendi; öne çıkan alıntılar kayıtlarınla birebir eşleşenlerden seçildi.'))).childNodes);
+  return box;
 }
