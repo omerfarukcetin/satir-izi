@@ -261,7 +261,7 @@ export async function getSetting(key, fallback = null) {
   return row === undefined ? fallback : row.value;
 }
 // Hesap eşitlemesine giren ayarlar ve yerel değişiklik bildirimi (sync.js dinler)
-export const SYNCED_SETTINGS = ['model', 'theme', 'fontSize', 'fontScale', 'followSefer', 'scanQuality', 'batchDelaySec'];
+export const SYNCED_SETTINGS = ['model', 'theme', 'fontSize', 'fontScale', 'followSefer', 'scanQuality', 'batchDelaySec', 'autoDigest'];
 const changeListeners = new Set();
 export const onLocalChange = fn => { changeListeners.add(fn); return () => changeListeners.delete(fn); };
 export const notifyLocalChange = () => changeListeners.forEach(fn => { try { fn(); } catch (e) { console.error(e); } });

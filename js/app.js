@@ -13,6 +13,7 @@ import { statsView } from './stats.js';
 import { tagsView } from './tags.js';
 import { askView } from './ask.js';
 import { graphView } from './graph.js';
+import { digestsView, digestView, autoDigests } from './digest.js';
 import { recoverJobs } from './batch-runner.js';
 import { scanView } from './scan.js';
 import { settingsView, applyAppearance } from './settings.js';
@@ -116,6 +117,8 @@ async function init() {
   router.register('etiketler', tagsView, 'highlights');
   router.register('sor', askView, 'highlights');
   router.register('harita', graphView, 'highlights');
+  router.register('ozetler', digestsView, 'home');
+  router.register('ozet', digestView, 'home');
   router.register('alintilar', highlightsView, 'highlights');
   router.register('ayarlar', settingsView, 'settings');
   router.setup($('#view'), markNav);
@@ -133,6 +136,8 @@ async function init() {
     if (relevant && !typing && !document.querySelector('dialog[open]')) router.refresh();
   });
   initSync().catch(e => console.warn('Eşitleme başlatılamadı', e));
+  // Hafta/ay bittiyse özeti hazırla (açılıştan biraz sonra; ekranı bekletmez)
+  setTimeout(() => autoDigests().catch(e => console.warn('Özet', e)), 6000);
 
   // Sefer köprüsü veritabanına yazdığında (ör. sayfa ilerlemesi) yeniden yükle ve eşitle
   window.addEventListener('storage', async e => {

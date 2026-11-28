@@ -625,3 +625,38 @@ dialog .sticky-actions { bottom: 0; background: var(--surface); padding: .6rem 0
 .tag-row-child[data-depth="3"] { padding-left: 3.4rem; }
 .tag-row-child .tag-pill::before { content: "↳ "; color: var(--muted); }
 @media (max-width: 599px) { .graph-stage { height: min(70vh, 640px); } }
+
+/* ---------- Haftalık / aylık özet ---------- */
+.dg-home { display: grid; gap: .5rem; }
+.dg-home .section-head { margin: 0; }
+.dg-row { display: grid; gap: .15rem; text-decoration: none; color: var(--ink); padding: .55rem .2rem; border-top: 1px solid var(--line); }
+.dg-row:first-of-type { border-top: 0; }
+.dg-kind { font-size: var(--t-tiny); font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: .04em; }
+.dg-snip { margin: .2rem 0 0; color: var(--ink-soft); font-size: var(--t-body); display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.dg-list { display: grid; gap: .4rem; margin: .6rem 0 1rem; }
+.dg-item { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .7rem .85rem; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.dg-item > div { display: grid; gap: .1rem; min-width: 0; }
+.dg-empty { opacity: .6; }
+.dg-current { margin-top: .6rem; border-style: dashed; }
+.dg-tiles { margin: .2rem 0 1rem; }
+.dg-overview { display: grid; gap: .7rem; font-size: var(--t-item); line-height: 1.65; }
+.dg-par p { margin: 0; }
+.dg-refs { display: block; margin-top: .25rem; font-size: var(--t-tiny); color: var(--muted); }
+.dg-block { margin: 1.2rem 0 .4rem; display: grid; gap: .6rem; }
+.dg-block h2 { font-size: var(--t-sec); margin: 0; }
+.dg-quote { margin: 0; padding: .85rem 1rem; border-left: 3px solid var(--earth); background: var(--surface); border-radius: 0 12px 12px 0; }
+.dg-quote blockquote { margin: 0; font-size: var(--t-item); line-height: 1.6; white-space: pre-wrap; }
+.dg-quote figcaption { display: flex; align-items: center; gap: .25rem; margin-top: .4rem; font-size: var(--t-meta); color: var(--muted); }
+.dg-quote figcaption a { color: var(--ink-soft); font-weight: 600; }
+.dg-quote .dg-share { margin-left: auto; }
+.dg-quote.small { border-left-color: var(--green); }
+.dg-quote.small blockquote { font-size: var(--t-body); }
+.dg-book { display: grid; gap: .5rem; }
+.dg-book p { margin: 0; line-height: 1.6; }
+.dg-book-head { display: flex; gap: .75rem; align-items: center; text-decoration: none; color: var(--ink); }
+.dg-book-head > div { display: grid; gap: .15rem; }
+.dg-badges { display: flex; gap: .3rem; }
+.dg-foot { margin-top: 1.4rem; display: grid; gap: .6rem; }
+.dg-noai { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+.chip-ok { background: var(--green-soft); color: var(--green); }
+.dg-block > .card, .dg-overview { margin: 0; }

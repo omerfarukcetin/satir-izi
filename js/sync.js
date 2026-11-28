@@ -10,6 +10,7 @@
 import { CONFIG } from './config.js';
 import * as db from './database.js';
 import { state, loadState } from './store.js';
+import { sanitizeDigests, mergeDigests, digestsSig } from './digest-data.js';
 import { getApiKey, setApiKey, isKeyRemembered, getKeyUpdatedAt, onKeyChange } from './gemini.js';
 import { nowISO, debounce } from './utils.js';
 
@@ -68,6 +69,7 @@ async function localSnapshot() {
     settings,
     settingsUpdatedAt: (await db.getSetting('settingsUpdatedAt', 0)) || 0,
     secrets: { geminiKey: getApiKey(), keyUpdatedAt: getKeyUpdatedAt() },
+    digests: (await db.getSetting('digests', {})) || {},
   };
 }
 
@@ -97,6 +99,7 @@ function sanitizeRemote(d) {
       geminiKey: typeof d.secrets?.geminiKey === 'string' ? d.secrets.geminiKey.slice(0, 200) : '',
       keyUpdatedAt: Number(d.secrets?.keyUpdatedAt) || 0,
     },
+    digests: sanitizeDigests(d.digests),
   };
 }
 
@@ -131,6 +134,7 @@ export function mergeSnapshots(local, remote) {
     settings: useRemoteSettings ? remote.settings : local.settings,
     settingsUpdatedAt: Math.max(local.settingsUpdatedAt, remote.settingsUpdatedAt),
     secrets: useRemoteKey ? remote.secrets : local.secrets,
+    digests: mergeDigests(local.digests, remote.digests),
   };
 }
 
@@ -138,7 +142,7 @@ function signature(s) {
   if (!s) return '';
   const part = list => list.map(r => r.id + '@' + t(r)).sort().join(',');
   return [part(s.books), part(s.highlights), part(s.notes), Object.keys(s.tombstones).length,
-    s.settingsUpdatedAt, s.secrets.keyUpdatedAt, s.secrets.keyUpdatedAt ? s.secrets.geminiKey.length : 0].join('|');
+    s.settingsUpdatedAt, s.secrets.keyUpdatedAt, s.secrets.keyUpdatedAt ? s.secrets.geminiKey.length : 0, digestsSig(s.digests)].join('|');
 }
 const dataSig = s => (s ? [s.books, s.highlights, s.notes].map(list => list.map(r => r.id + '@' + t(r)).sort().join(',')).join('|') : '');
 
@@ -163,6 +167,10 @@ async function applyLocal(merged, local) {
       for (const [k, v] of Object.entries(merged.settings)) tx.objectStore('settings').put({ key: k, value: v });
       tx.objectStore('settings').put({ key: 'settingsUpdatedAt', value: merged.settingsUpdatedAt });
     });
+    changedSettings = true;
+  }
+  if (digestsSig(merged.digests) !== digestsSig(local.digests)) {
+    await db.put('settings', { key: 'digests', value: merged.digests });
     changedSettings = true;
   }
   if (merged.secrets.keyUpdatedAt > local.secrets.keyUpdatedAt) {

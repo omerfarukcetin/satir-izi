@@ -126,6 +126,12 @@ export async function settingsView() {
   ], quality);
   qualitySel.onchange = async () => { await setSetting('scanQuality', qualitySel.value); toast('Tarama kalitesi kaydedildi.'); };
   const scan = card('Tarama', field('Gönderilecek fotoğraf çözünürlüğü', qualitySel));
+  const autoDg = el('input', { type: 'checkbox', checked: (await getSetting('autoDigest', true)) !== false });
+  autoDg.addEventListener('change', async () => { await setSetting('autoDigest', autoDg.checked); toast(autoDg.checked ? 'Özetler hafta ve ay bitince hazırlanacak.' : 'Özetler yalnızca sen isteyince hazırlanacak.'); });
+  const digestCard = card('Haftalık ve aylık özet',
+    el('label', { class: 'check' }, autoDg, el('span', {}, 'Hafta ve ay bitince otomatik hazırla')),
+    el('p', { class: 'muted small' }, 'Uygulamayı açtığında, biten son hafta ve ayın özeti yoksa hazırlanır. Her özet 1 Gemini isteği harcar ve bir kez hazırlanır; hesabın açıksa diğer cihazlarla paylaşılır. Anahtar yoksa yalnızca rakamlar ve seçilen alıntılar hazırlanır.'),
+    button('Özetleri aç', { small: true, href: '#/ozetler' }));
 
   // --- Görünüm ---
 
@@ -268,6 +274,6 @@ export async function settingsView() {
   return el('section', { class: 'settings' },
     pageHeader('Ayarlar'),
     await accountCard(),
-    gemini, scan, appearance, backup, sefer, storage, embedded ? null : install, privacy, danger,
+    gemini, scan, digestCard, appearance, backup, sefer, storage, embedded ? null : install, privacy, danger,
     el('p', { class: 'muted small center' }, `Satır İzi v${APP_VERSION} · Okudukların kaybolmasın.`));
 }

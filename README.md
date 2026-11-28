@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v3.3.0)
+## Özellikler (v3.4.0)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -69,6 +69,20 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
   özet, temalar (sayfalarıyla), öne çıkan alıntılar, düşüncelerin ve düşünmek için sorular. Dışarıdan bilgi eklenmez;
   öne çıkan alıntılar kayıtlı alıntılarla harfiyen eşleşmeyen her şey atılır, olmayan sayfa numaraları silinir.
   Rapor kitapla saklanır/eşitlenir, Markdown dışa aktarıma girer; yeni alıntı eklenince “Yenile” uyarısı çıkar.
+- **Haftalık ve aylık özet** (ana sayfada “Okuduklarının izi”, tümü: `#/ozetler`): amaç okuduklarını unutmamak.
+  Hafta (pazartesi–pazar) ve ay bitince, uygulamayı açtığında biten son dönemin özeti kendiliğinden hazırlanır
+  (Ayarlar → Haftalık ve aylık özet ile kapatılabilir; kapalıyken listeden “Hazırla” ile istenir).
+  - Cihazda hesaplanan: alıntı/not/kitap sayısı, Sefer’de o dönemde okunan sayfalar (Sefer bu cihazda açıldıysa),
+    başlanan ve biten kitaplar, etiketler, seçilen alıntılar ve **Unutma** bölümü (en az 3 hafta önce kaydedilmiş,
+    tercihen aynı etiketli alıntılar).
+  - Gemini ile (1 istek): tarafsız genel özet, kitap kitap kısa özet, temalar ve dönemin satırları. Yalnızca o dönemin
+    kayıtları gönderilir; her bölüm dayandığı kayıtları belirtmek zorundadır. Kaynağı olmayan, başka kitabın kaydına
+    dayanan ya da kayıtlarda geçmeyen tırnaklı söz içeren bölümler atılır ve sayısı gösterilir.
+  - Özet alıntı metnini değil kayıt kimliğini saklar; alıntılar her zaman kayıtlı hâliyle gösterilir. Dönemin kayıtları
+    sonradan değişirse “Güncelle” önerilir. Anahtar/internet yoksa ya da istek başarısız olursa yalnızca cihaz bölümleri
+    kaydedilir; başarısız değerlendirme en erken 12 saat sonra kendiliğinden bir kez daha denenir.
+  - Hesap açıksa özetler eşitlenir; diğer cihaz aynı özet için yeniden istek göndermez (açılışta önce eşitleme beklenir).
+  - Markdown olarak kopyalanabilir/indirilebilir; alıntılar kart olarak paylaşılabilir.
 - **Bağlantı haritası** (Alıntılarım → Harita, Etiketler → Harita): etiketler (turkuaz daire) ve kitaplar (safran
   dikdörtgen) ile aralarındaki bağlar. Bağlar: aynı alıntıda birlikte kullanılan etiketler, kitapta geçen etiketler,
   alt etiketler (kesikli çizgi) ve [[Kitap]] ya da ilgili alıntı bağlantılarıyla kitaplar arası bağ. Düğüme dokununca
@@ -247,6 +261,9 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 3.4.0
+- Haftalık ve aylık özet (Okuduklarının izi).
 
 ### 3.3.0
 - Bağlantı haritası ve kendiliğinden çıkan konu kümeleri.
