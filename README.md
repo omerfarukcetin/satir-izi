@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v3.6.1)
+## Özellikler (v3.6.2)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -261,6 +261,9 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 3.6.2
+- Yazı boyutları tek ölçekte (Sefer ile aynı: 12/13/14/15/17/24 px): elle verilmiş 32 ara boyut ölçeğe bağlandı; form alanları 16 yerine 15 px (iOS'ta odaklanınca yakınlaştırmasın diye yalnızca orada 16 px); Ayarlar başlıkları diğer başlıklarla aynı.
 
 ### 3.6.1
 - Alıntılarım: kitap ve sıralama seçicileri küçük ve tek satırda; uzun kitap adı sayfayı yana taşırmıyor. Telefonda başlık düğmeleri ve Sefer içindeki üst menü daha ince.
