@@ -194,13 +194,10 @@ export async function loginSuggestion() {
   if (!sync.isConfigured() || sync.currentUser() || sync.status.state === 'off') return null;
   if (await getSetting('loginSuggestionDismissed', false)) return null;
   if (!state.books.length) return null;
-  const card = el('div', { class: 'callout callout-soft' }, icon('key'),
-    el('div', {},
-      el('strong', {}, 'Arşivin bütün cihazlarında olsun'),
-      el('p', { class: 'small' }, 'Emanet ve Sefer’deki hesabınla giriş yap; kitapların, alıntıların ve API anahtarın telefon ile bilgisayar arasında eşitlensin ve her gün otomatik yedeklensin.'),
-      el('div', { class: 'row-actions' },
-        button('Giriş yap', { small: true, variant: 'primary', onClick: openAuthDialog }),
-        button('Şimdi değil', { small: true, variant: 'ghost', onClick: async () => { await setSetting('loginSuggestionDismissed', true); card.remove(); } }))));
+  const card = el('div', { class: 'notice-slim' }, icon('key', { size: 18 }),
+    el('span', {}, 'Telefon ve bilgisayarda eşitlemek için giriş yap'),
+    button('Giriş yap', { small: true, variant: 'primary', onClick: openAuthDialog }),
+    el('button', { type: 'button', class: 'icon-btn notice-x', 'aria-label': 'Şimdi değil', title: 'Şimdi değil', onclick: async () => { await setSetting('loginSuggestionDismissed', true); card.remove(); } }, icon('x', { size: 16 })));
   return card;
 }
 

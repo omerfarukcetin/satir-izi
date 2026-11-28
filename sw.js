@@ -2,7 +2,7 @@
 // Her yayında CACHE_VERSION değerini artırın; tarayıcı yeni dosyaları indirir ve kullanıcıya
 // "Yeni sürüm hazır" bildirimi gösterilir. Yalnızca uygulamanın kendi statik dosyaları önbelleğe alınır.
 // Gemini istekleri (farklı alan adı) ve API anahtarı hiçbir zaman önbelleğe girmez.
-const CACHE_VERSION = '3.4.1';
+const CACHE_VERSION = '3.5.0';
 const CACHE = `satir-izi-${CACHE_VERSION}`;
 const ASSETS = [
   './',
