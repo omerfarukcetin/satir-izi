@@ -117,9 +117,9 @@ export function highlightsView({ params } = {}) {
   search.oninput = debounce(() => { hlState.q = search.value; hlState.limit = 60; draw(); }, 150);
   const bookSel = select([{ value: '', label: 'Tüm kitaplar' }, ...[...state.books].sort((a, b) => compareTr(a.title, b.title)).map(b => ({ value: b.id, label: b.title }))], hlState.book, { 'aria-label': 'Kitap filtresi' });
   bookSel.onchange = () => { hlState.book = bookSel.value; draw(); };
-  const sortSel = select([{ value: 'new', label: 'Yeniden eskiye' }, { value: 'old', label: 'Eskiden yeniye' }, { value: 'book', label: 'Kitap ve sayfa' }], hlState.sort, { 'aria-label': 'Sıralama' });
+  const sortSel = select([{ value: 'new', label: 'En yeni' }, { value: 'old', label: 'En eski' }, { value: 'book', label: 'Kitaba göre' }], hlState.sort, { 'aria-label': 'Sıralama' });
   sortSel.onchange = () => { hlState.sort = sortSel.value; draw(); };
-  const favBtn = el('button', { type: 'button', class: 'chip-btn', 'aria-pressed': String(hlState.fav) }, icon('star', { size: 16 }), 'Favoriler');
+  const favBtn = el('button', { type: 'button', class: 'chip-btn fav-toggle', 'aria-pressed': String(hlState.fav), 'aria-label': 'Yalnızca favoriler', title: 'Yalnızca favoriler' }, icon('star', { size: 16 }), el('span', { class: 'hide-narrow' }, 'Favoriler'));
   favBtn.onclick = () => { hlState.fav = !hlState.fav; favBtn.setAttribute('aria-pressed', String(hlState.fav)); draw(); };
   draw();
   return el('section', {},

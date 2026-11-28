@@ -218,7 +218,12 @@ select { appearance: auto; }
 
 /* ---------- Arama/araç çubuğu ---------- */
 .toolbar { display: flex; gap: .5rem; flex-wrap: wrap; margin: .5rem 0; }
-.toolbar > select { flex: 1 1 160px; width: auto; }
+.toolbar > select { flex: 1 1 0; width: auto; min-width: 0; max-width: 100%; text-overflow: ellipsis; } /* uzun kitap adı satırı taşırmasın */
+.toolbar .search input { min-height: 42px; padding-top: .45rem; padding-bottom: .45rem; }
+/* Filtre seçicileri: "Favoriler" düğmesiyle aynı boyda, küçük ve hap biçiminde */
+.toolbar > select { min-height: 36px; height: 36px; padding: 0 .7rem; font-size: var(--t-body); font-weight: 600; border-radius: 999px; color: var(--ink-soft); }
+.toolbar > select:first-child { flex-grow: 1.6; }
+.toolbar .fav-toggle { flex: none; min-height: 36px; height: 36px; }
 .search { position: relative; flex: 1 1 260px; }
 .search .icon { position: absolute; left: .8rem; top: 50%; transform: translateY(-50%); color: var(--muted); }
 .search input { padding-left: 2.4rem; }
@@ -713,3 +718,13 @@ dialog .sticky-actions { bottom: 0; background: var(--surface); padding: .6rem 0
 .theme-sw[data-sw="emerald"] { background: linear-gradient(135deg, #0f2a24 50%, #16372f 50%); --sw-dot: #5fd0b4; }
 .theme-sw[data-sw="sand"] { background: linear-gradient(135deg, #ece4d6 50%, #f6f1e7 50%); --sw-dot: #a8641e; }
 .theme-sw[data-sw="auto"] { background: linear-gradient(135deg, #f4f6fa 50%, #13294b 50%); --sw-dot: #2bb3b1; }
+
+/* ---------- Telefonda daha sıkı başlık eylemleri ve gömülü menü ---------- */
+@media (max-width: 520px) {
+  .hide-narrow { display: none; }
+  .page-title-row .row-actions { gap: .4rem; }
+  .page-title-row .row-actions .btn-small { min-height: 34px; padding: .3rem .65rem; font-size: var(--t-meta); }
+  .page-title-row .row-actions .btn-small .icon { width: 16px; height: 16px; }
+}
+.embedded .nav-links { height: 46px; }
+.embedded .nav-link .icon { width: 21px; height: 21px; }
