@@ -65,6 +65,14 @@
     --g-tag: #2bb3b1; --g-book: #c28e22;
 }
 
+/* ---------- Temalar: Sefer ile aynı paletler (data-pal). Değerler Sefer'in --lapis/--white/--mist/--turq/--saffron/--coral renklerinden ---------- */
+:root[data-pal="navy"] { color-scheme: dark; --bg: #13294b; --surface: #1a3561; --surface-2: #213f70; --ink: #f7f3ea; --ink-soft: #dfe5f0; --muted: #a9b8d3; --line: #27497d; --green: #2bb3b1; --on-green: #0f213d; --green-soft: #1d4868; --earth: #e8b03c; --accent: #e8b03c; --earth-soft: #3a4058; --danger: #e0674f; --danger-soft: #45304a; --warn: #e8b03c; --warn-soft: #34405a; --toast: #0f213d; --shadow: none; --g-tag: #2bb3b1; --g-book: #c28e22; }
+:root[data-pal="paper"] { color-scheme: light; --bg: #efe7d6; --surface: #f9f4e8; --surface-2: color-mix(in srgb, #f9f4e8 50%, #e1d5bb); --ink: #2b2620; --ink-soft: color-mix(in srgb, #2b2620 82%, #776c5b); --muted: #776c5b; --line: #e1d5bb; --green: #0f6e69; --on-green: #ffffff; --green-soft: color-mix(in srgb, #0f6e69 14%, #f9f4e8); --earth: #b9801c; --accent: #b9801c; --earth-soft: color-mix(in srgb, #b9801c 14%, #f9f4e8); --danger: #b4503a; --danger-soft: color-mix(in srgb, #b4503a 12%, #f9f4e8); --warn: #b9801c; --warn-soft: color-mix(in srgb, #b9801c 12%, #f9f4e8); --toast: #2b2620; --shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 4px 14px rgb(0 0 0 / 5%); --g-tag: #0a908c; --g-book: #b7791f; }
+:root[data-pal="white"] { color-scheme: light; --bg: #f4f6fa; --surface: #ffffff; --surface-2: color-mix(in srgb, #ffffff 50%, #e3e8f0); --ink: #16233d; --ink-soft: color-mix(in srgb, #16233d 82%, #5c6a82); --muted: #5c6a82; --line: #e3e8f0; --green: #0f7f7c; --on-green: #ffffff; --green-soft: color-mix(in srgb, #0f7f7c 14%, #ffffff); --earth: #c48a12; --accent: #c48a12; --earth-soft: color-mix(in srgb, #c48a12 14%, #ffffff); --danger: #cc4f36; --danger-soft: color-mix(in srgb, #cc4f36 12%, #ffffff); --warn: #c48a12; --warn-soft: color-mix(in srgb, #c48a12 12%, #ffffff); --toast: #16233d; --shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 4px 14px rgb(0 0 0 / 5%); --g-tag: #0a908c; --g-book: #b7791f; }
+:root[data-pal="black"] { color-scheme: dark; --bg: #0b0d10; --surface: #15181d; --surface-2: color-mix(in srgb, #15181d 50%, #23272e); --ink: #eceae4; --ink-soft: color-mix(in srgb, #eceae4 82%, #9aa0aa); --muted: #9aa0aa; --line: #23272e; --green: #3cc2bf; --on-green: #0b0d10; --green-soft: color-mix(in srgb, #3cc2bf 22%, #15181d); --earth: #e9b44a; --accent: #e9b44a; --earth-soft: color-mix(in srgb, #e9b44a 18%, #15181d); --danger: #e46b55; --danger-soft: color-mix(in srgb, #e46b55 20%, #15181d); --warn: #e9b44a; --warn-soft: color-mix(in srgb, #e9b44a 16%, #15181d); --toast: #000000; --shadow: none; --g-tag: #2bb3b1; --g-book: #c28e22; }
+:root[data-pal="emerald"] { color-scheme: dark; --bg: #0f2a24; --surface: #16372f; --surface-2: color-mix(in srgb, #16372f 50%, #22493f); --ink: #f2efe4; --ink-soft: color-mix(in srgb, #f2efe4 82%, #a7c0b6); --muted: #a7c0b6; --line: #22493f; --green: #5fd0b4; --on-green: #0f2a24; --green-soft: color-mix(in srgb, #5fd0b4 22%, #16372f); --earth: #e6b84f; --accent: #e6b84f; --earth-soft: color-mix(in srgb, #e6b84f 18%, #16372f); --danger: #e57458; --danger-soft: color-mix(in srgb, #e57458 20%, #16372f); --warn: #e6b84f; --warn-soft: color-mix(in srgb, #e6b84f 16%, #16372f); --toast: color-mix(in srgb, #0f2a24 70%, #000); --shadow: none; --g-tag: #2bb3b1; --g-book: #c28e22; }
+:root[data-pal="sand"] { color-scheme: light; --bg: #ece4d6; --surface: #f6f1e7; --surface-2: color-mix(in srgb, #f6f1e7 50%, #ddd1bc); --ink: #3a2f24; --ink-soft: color-mix(in srgb, #3a2f24 82%, #7d6d5a); --muted: #7d6d5a; --line: #ddd1bc; --green: #2f6f5e; --on-green: #ffffff; --green-soft: color-mix(in srgb, #2f6f5e 14%, #f6f1e7); --earth: #a8641e; --accent: #a8641e; --earth-soft: color-mix(in srgb, #a8641e 14%, #f6f1e7); --danger: #a5452f; --danger-soft: color-mix(in srgb, #a5452f 12%, #f6f1e7); --warn: #a8641e; --warn-soft: color-mix(in srgb, #a8641e 12%, #f6f1e7); --toast: #3a2f24; --shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 4px 14px rgb(0 0 0 / 5%); --g-tag: #0a908c; --g-book: #b7791f; }
+
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
@@ -690,3 +698,18 @@ dialog .sticky-actions { bottom: 0; background: var(--surface); padding: .6rem 0
 .home-quote.is-old { border-left-color: var(--green); }
 .hq-text { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-size: var(--t-body); line-height: 1.5; }
 .hq-meta { display: block; margin-top: .3rem; color: var(--muted); font-size: var(--t-tiny); font-weight: 600; }
+
+/* Tema seçici: renk örnekli (sol yarı zemin, sağ yarı kart; nokta ana renk) */
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(7.2rem, 1fr)); gap: .45rem; margin: .3rem 0 .4rem; }
+.theme-opt { display: flex; align-items: center; gap: .55rem; padding: .5rem .6rem; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: 600 var(--t-body) var(--sans); cursor: pointer; text-align: left; }
+.theme-opt[aria-pressed="true"] { border-color: var(--green); box-shadow: 0 0 0 2px color-mix(in srgb, var(--green) 25%, transparent); }
+.theme-opt:disabled { opacity: .6; cursor: default; }
+.theme-sw { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgb(0 0 0 / 15%); position: relative; }
+.theme-sw::after { content: ""; position: absolute; right: 3px; bottom: 3px; width: 8px; height: 8px; border-radius: 50%; background: var(--sw-dot); }
+.theme-sw[data-sw="dark"] { background: linear-gradient(135deg, #13294b 50%, #1a3561 50%); --sw-dot: #e8b03c; }
+.theme-sw[data-sw="light"] { background: linear-gradient(135deg, #efe7d6 50%, #f9f4e8 50%); --sw-dot: #0f6e69; }
+.theme-sw[data-sw="white"] { background: linear-gradient(135deg, #f4f6fa 50%, #ffffff 50%); --sw-dot: #0f7f7c; }
+.theme-sw[data-sw="black"] { background: linear-gradient(135deg, #0b0d10 50%, #15181d 50%); --sw-dot: #e9b44a; }
+.theme-sw[data-sw="emerald"] { background: linear-gradient(135deg, #0f2a24 50%, #16372f 50%); --sw-dot: #5fd0b4; }
+.theme-sw[data-sw="sand"] { background: linear-gradient(135deg, #ece4d6 50%, #f6f1e7 50%); --sw-dot: #a8641e; }
+.theme-sw[data-sw="auto"] { background: linear-gradient(135deg, #f4f6fa 50%, #13294b 50%); --sw-dot: #2bb3b1; }

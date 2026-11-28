@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v3.5.0)
+## Özellikler (v3.6.0)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -261,6 +261,12 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 3.6.0
+- Temalar Sefer ile aynı: Lacivert, Krem, Beyaz, Siyah, Zümrüt, Kum ve Cihaza göre (Sefer'deki gibi cihaz gece modundayken
+  Sefer'in seçtiği koyu tema, gündüz modundayken açık tema; varsayılan Lacivert/Beyaz). “Sefer ile aynı olsun” açıkken
+  Sefer'de seçilen tema ve yazı boyutu kullanılır, Sefer'de değişince açık Satır İzi sayfasına anında geçer.
+  Renk örnekli tema seçici. Haritanın renkleri her tema için doğrulandı.
 
 ### 3.5.0
 - Sade ana sayfa: küçük başlık (Sayfa tara, Kitap ekle, Arşivine sor), aynı anda en fazla bir uyarı (bekleyen tarama >

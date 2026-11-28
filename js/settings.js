@@ -12,9 +12,23 @@ import { accountCard } from './account.js';
 import * as sync from './sync.js';
 
 // ---- Tema ve yazı boyutu (Sefer ile aynı seçenekler) ----
-// Tema: dark (Gece) · light (Gündüz) · auto (Cihaza göre). Yazı boyutu: 0.8 · 0.9 · 1 · 1.12 · 1.25.
+// Temalar Sefer'dekiyle birebir: anahtar → [açık/koyu, palet, ad]. "auto" cihazın gece/gündüz moduna göre
+// autoDark (varsayılan Lacivert) veya autoLight (varsayılan Beyaz) paletini kullanır — Sefer'deki kuralla aynı.
 // "Sefer ile aynı" açıkken (varsayılan) seçimler Sefer'den okunur (aynı alan adı → aynı localStorage).
-export const THEMES = [['dark', 'Gece'], ['light', 'Gündüz'], ['auto', 'Cihaza göre']];
+export const THEME_DEFS = {
+  dark: ['dark', 'navy', 'Lacivert'], light: ['light', 'paper', 'Krem'], white: ['light', 'white', 'Beyaz'],
+  black: ['dark', 'black', 'Siyah'], emerald: ['dark', 'emerald', 'Zümrüt'], sand: ['light', 'sand', 'Kum'],
+};
+const PAL_META = { navy: '#13294b', paper: '#efe7d6', white: '#f4f6fa', black: '#0b0d10', emerald: '#0f2a24', sand: '#ece4d6' };
+export const THEMES = [...Object.entries(THEME_DEFS).map(([k, d]) => [k, d[2]]), ['auto', 'Cihaza göre']];
+const validTheme = t => (t === 'auto' || THEME_DEFS[t] ? t : 'dark');
+/** Tema anahtarını gerçek palete çevirir: { mode: 'dark'|'light', pal } */
+export function resolveTheme(theme, { autoLight = 'white', autoDark = 'dark' } = {}) {
+  let k = validTheme(theme);
+  if (k === 'auto') k = matchMedia('(prefers-color-scheme: light)').matches ? (THEME_DEFS[autoLight] ? autoLight : 'white') : (THEME_DEFS[autoDark] ? autoDark : 'dark');
+  const [mode, pal] = THEME_DEFS[k];
+  return { mode, pal };
+}
 export const FONT_SCALES = [['0.8', 'Çok küçük'], ['0.9', 'Küçük'], ['1', 'Normal'], ['1.12', 'Büyük'], ['1.25', 'Çok büyük']];
 const OLD_FONT = { normal: 1, large: 1.12, xlarge: 1.25 };
 
@@ -24,7 +38,7 @@ export function seferUI() {
     if (!raw) return null;
     const ui = JSON.parse(raw)?.ui;
     if (!ui) return null;
-    return { theme: ['dark', 'light', 'auto'].includes(ui.theme) ? ui.theme : 'dark', font: Number(ui.font) > 0 ? Number(ui.font) : 1 };
+    return { theme: validTheme(ui.theme), font: Number(ui.font) > 0 ? Number(ui.font) : 1, autoLight: ui.autoLight, autoDark: ui.autoDark };
   } catch { return null; }
 }
 
@@ -36,19 +50,21 @@ export async function currentAppearance() {
   if (sf) return { ...sf, source: 'sefer' };
   let theme = await getSetting('theme', 'auto');
   if (theme === 'system') theme = 'auto';
+  theme = validTheme(theme);
   let font = Number(await getSetting('fontScale', 0));
   if (!font) font = OLD_FONT[await getSetting('fontSize', 'normal')] || 1;
   return { theme, font, source: 'own' };
 }
 
 export async function applyAppearance() {
-  const { theme, font } = await currentAppearance();
+  const look = await currentAppearance();
+  const { mode, pal } = resolveTheme(look.theme, { autoLight: look.autoLight, autoDark: look.autoDark });
   const root = document.documentElement;
-  if (theme === 'auto') root.removeAttribute('data-theme'); else root.dataset.theme = theme;
-  root.style.fontSize = `${Math.round(16 * font * 100) / 100}px`;
+  root.dataset.theme = mode;
+  root.dataset.pal = pal;
+  root.style.fontSize = `${Math.round(16 * look.font * 100) / 100}px`;
   root.removeAttribute('data-font');
-  const dark = theme === 'dark' || (theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
-  document.querySelector('meta[name=theme-color]')?.setAttribute('content', dark ? '#13294b' : '#eef2f8');
+  document.querySelector('meta[name=theme-color]')?.setAttribute('content', PAL_META[pal]);
 }
 matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyAppearance());
 // Sefer'de görünüm değişince (aynı tarayıcıda) uygula
@@ -59,6 +75,18 @@ function segmented(options, value, onPick, { disabled = false, label } = {}) {
   for (const [v, l] of options) {
     const b = el('button', { type: 'button', class: 'chip-btn', 'aria-pressed': String(String(value) === v), disabled }, l);
     b.onclick = async () => { wrap.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); await onPick(v); };
+    wrap.append(b);
+  }
+  return wrap;
+}
+
+/** Renk örnekli tema seçici (Sefer'deki gibi) */
+function themePicker(value, onPick, disabled) {
+  const wrap = el('div', { class: 'theme-grid', role: 'group', 'aria-label': 'Tema' });
+  for (const [k, label] of THEMES) {
+    const b = el('button', { type: 'button', class: 'theme-opt', 'aria-pressed': String(value === k), disabled },
+      el('span', { class: 'theme-sw', 'data-sw': k, 'aria-hidden': 'true' }), label);
+    b.onclick = async () => { wrap.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); await onPick(k); };
     wrap.append(b);
   }
   return wrap;
@@ -151,7 +179,7 @@ export async function settingsView() {
       : locked ? 'Tema ve yazı boyutu Sefer’deki ayarlardan alınıyor; Sefer’de değiştirdiğinde burada da değişir.'
         : followSefer && !hasSefer ? 'Bu cihazda Sefer henüz açılmamış; şimdilik buradaki ayarlar kullanılıyor.' : 'Satır İzi’nin kendi görünüm ayarları kullanılıyor.'),
     el('span', { class: 'field-label' }, 'Tema'),
-    segmented(THEMES, look.theme, async v => { await setSetting('theme', v); applyAppearance(); }, { disabled: locked, label: 'Tema' }),
+    themePicker(look.theme, async v => { await setSetting('theme', v); applyAppearance(); }, locked),
     el('span', { class: 'field-label seg-label' }, 'Yazı boyutu'),
     segmented(FONT_SCALES, String(look.font), async v => { await setSetting('fontScale', Number(v)); applyAppearance(); }, { disabled: locked, label: 'Yazı boyutu' }));
 
