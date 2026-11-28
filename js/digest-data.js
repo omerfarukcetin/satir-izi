@@ -8,6 +8,15 @@ export const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.
 const parseDay = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
 const MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 
+/** Birden çok dönemi kapsayan aralık etiketi (from dahil, to hariç gün anahtarları) */
+export function rangeLabel(from, to) {
+  const a = parseDay(from), b = parseDay(to); b.setDate(b.getDate() - 1);
+  const ay = (d, y) => `${MONTHS[d.getMonth()]}${y ? ' ' + d.getFullYear() : ''}`;
+  if (a.getDate() === 1 && b.getDate() === new Date(b.getFullYear(), b.getMonth() + 1, 0).getDate()) // tam aylar
+    return a.getFullYear() === b.getFullYear() ? `${ay(a)} – ${ay(b, true)}` : `${ay(a, true)} – ${ay(b, true)}`;
+  return a.getFullYear() === b.getFullYear() ? `${a.getDate()} ${ay(a)} – ${b.getDate()} ${ay(b, true)}` : `${a.getDate()} ${ay(a, true)} – ${b.getDate()} ${ay(b, true)}`;
+}
+
 /** Dönem: { id, type, from, to (hariç), label } — hafta pazartesi başlar */
 export function periodOf(type, date = new Date()) {
   if (type === 'hafta') {

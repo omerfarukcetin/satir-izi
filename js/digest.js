@@ -10,7 +10,7 @@ import { button, pageHeader, emptyState, cover } from './ui.js';
 import { periodDigest, hasApiKey } from './gemini.js';
 import { currentUser, status as syncStatus, onSyncChange } from './sync.js';
 import { openShareDialog } from './share.js';
-import { periodOf, lastCompleted, periodById, periodItems, computeLocal, periodSig, sanitizeDigest, dayKey } from './digest-data.js';
+import { periodOf, lastCompleted, periodById, periodItems, computeLocal, periodSig, sanitizeDigest, dayKey, rangeLabel } from './digest-data.js';
 
 const RETRY_AFTER_MS = 12 * 3600e3; // başarısız değerlendirme en erken 12 saat sonra kendiliğinden yeniden denenir
 const busy = new Set();             // şu an hazırlanan dönemler
@@ -143,15 +143,31 @@ export async function digestsView() {
   const cur = periodOf(listType);
   const seg = el('div', { class: 'chips seg', role: 'group', 'aria-label': 'Dönem' },
     ...[['hafta', 'Haftalık'], ['ay', 'Aylık']].map(([v, l]) => el('button', { type: 'button', class: 'chip-btn chip-sm', 'aria-pressed': String(listType === v), onclick: () => { listType = v; refresh(); } }, l)));
-  const rows = periods.map(p => {
-    const d = all[p.id], n = periodItems(p);
+  // Art arda gelen boş dönemler tek satırda toplanır (liste kalabalıklaşmasın)
+  const rows = [];
+  let emptyRun = [];
+  const flushEmpty = () => {
+    if (!emptyRun.length) return;
+    const unit = listType === 'hafta' ? 'hafta' : 'ay';
+    const label = emptyRun.length === 1 ? emptyRun[0].label : rangeLabel(emptyRun[emptyRun.length - 1].from, emptyRun[0].to);
+    rows.push(el('div', { class: 'dg-item dg-empty' }, el('div', {}, el('strong', {}, label), el('span', { class: 'muted small' }, emptyRun.length === 1 ? 'Bu dönemde kayıt yok' : `${emptyRun.length} ${unit} kayıt yok`))));
+    emptyRun = [];
+  };
+  for (const p of periods) {
+    const n = periodItems(p), d = all[p.id];
+    if (!busy.has(p.id) && !(d && !d.empty) && !(n.highlights.length + n.notes.length)) { emptyRun.push(p); continue; }
+    flushEmpty();
+    rows.push(rowFor(p, d, n));
+  }
+  flushEmpty();
+  function rowFor(p, d, n) {
     const count = n.highlights.length + n.notes.length;
     if (busy.has(p.id)) return el('div', { class: 'dg-item' }, el('div', {}, el('strong', {}, p.label), el('span', { class: 'muted small' }, 'Hazırlanıyor…')), el('span', { class: 'spinner spinner-sm' }));
     if (d && !d.empty) return el('a', { class: 'dg-item', href: `#/ozet/${p.id}` }, el('div', {}, el('strong', {}, p.label), el('span', { class: 'muted small' }, statLine(d) + (d.ai ? '' : ' · yalnızca rakamlar ve seçim'))), icon('chevron', { size: 18 }));
     if (!count) return el('div', { class: 'dg-item dg-empty' }, el('div', {}, el('strong', {}, p.label), el('span', { class: 'muted small' }, 'Bu dönemde kayıt yok')));
     return el('div', { class: 'dg-item' }, el('div', {}, el('strong', {}, p.label), el('span', { class: 'muted small' }, `${count} kayıt · özet henüz hazırlanmadı`)),
       button('Hazırla', { small: true, onClick: () => buildDigest(p).then(d => d && (location.hash = '#/ozet/' + p.id)) }));
-  });
+  }
   const curN = periodItems(cur);
   return el('section', { class: 'digests' },
     pageHeader('Özetler', { back: '#/', subtitle: 'Hafta ve ay bitince o dönemin alıntılarından ve notlarından özet hazırlanır. Amaç: okuduklarını unutmamak.' }),
