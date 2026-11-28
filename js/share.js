@@ -75,9 +75,87 @@ const lum = h => { const [r, g, b] = hex2rgb(h).map(v => { v /= 255; return v <=
 const shade = (h, f) => { const [r, g, b] = hex2rgb(h); const m = v => Math.max(0, Math.min(255, Math.round(f < 0 ? v * (1 + f) : v + (255 - v) * f))); return '#' + [m(r), m(g), m(b)].map(v => v.toString(16).padStart(2, '0')).join(''); };
 const alpha = (h, a) => { const [r, g, b] = hex2rgb(h); return `rgba(${r},${g},${b},${a})`; };
 
+// ---- Kapakla uyumlu paletler: kapağın baskın, ikincil ve canlı rengi cihazda çıkarılır
+const toHex = (r, g, b) => '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+function rgb2hsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+  if (mx === mn) return [0, 0, l];
+  const d = mx - mn, s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+  const h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h * 60, s, l];
+}
+function hsl(h, s, l) {
+  s = Math.max(0, Math.min(1, s)); l = Math.max(0, Math.min(1, l));
+  const k = n => (n + h / 30) % 12, a = s * Math.min(l, 1 - l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return toHex(f(0) * 255, f(8) * 255, f(4) * 255);
+}
+const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+/** Rengi, zemine karşı en az `min` kontrast verecek kadar açar/koyulaştırır */
+function readable(col, bgs, min, dir) {
+  let [h, s, l] = rgb2hsl(...hex2rgb(col));
+  for (let i = 0; i < 40 && bgs.some(b => contrast(hsl(h, s, l), b) < min); i++) l += dir * 0.02;
+  return hsl(h, s, l);
+}
+export const COVER_THEMES = [{ id: 'kapak-koyu', label: 'Koyu' }, { id: 'kapak-acik', label: 'Açık' }, { id: 'kapak-canli', label: 'Canlı' }];
+const paletteCache = new WeakMap();
+export function coverPalettes(img) {
+  if (paletteCache.has(img)) return paletteCache.get(img);
+  const N = 48, c = document.createElement('canvas'); c.width = N; c.height = N;
+  const cx = c.getContext('2d'); drawFit(cx, img, 0, 0, N, N);
+  let data;
+  try { data = cx.getImageData(0, 0, N, N).data; } catch { return null; } // izin vermeyen uzak görsel
+  const buckets = new Map();
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 200) continue;
+    const k = (data[i] >> 4) << 8 | (data[i + 1] >> 4) << 4 | (data[i + 2] >> 4);
+    const b = buckets.get(k) || { n: 0, r: 0, g: 0, b: 0 }; b.n++; b.r += data[i]; b.g += data[i + 1]; b.b += data[i + 2]; buckets.set(k, b);
+  }
+  const cols = [...buckets.values()].map(b => { const r = b.r / b.n, g = b.g / b.n, bl = b.b / b.n; const [h, s, l] = rgb2hsl(r, g, bl); return { n: b.n, h, s, l, hex: toHex(r, g, bl) }; }).sort((a, b) => b.n - a.n);
+  if (!cols.length) return null;
+  const dom = cols.find(c => c.l > 0.06 && c.l < 0.94) || cols[0];
+  const total = cols.reduce((a, c) => a + c.n, 0);
+  // Canlı renk sayılması için kapağın en az %2'sini kaplamalı (JPEG kenar lekeleri sayılmasın)
+  const vividRaw = [...cols].filter(c => c.s > 0.3 && c.l > 0.2 && c.l < 0.82 && c.n >= total * 0.02).sort((a, b) => b.n * b.s * b.s - a.n * a.s * a.s)[0];
+  const mono = !vividRaw && dom.s < 0.2; // renksiz (siyah-beyaz) kapak
+  const vivid = vividRaw || dom;
+  const hueGap = (a, b) => { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
+  const second = cols.find(c => c !== dom && c.n >= total * 0.02 && (hueGap(c.h, dom.h) > 35 || Math.abs(c.l - dom.l) > 0.3)) || dom;
+  const warm = '#e8b03c'; // renksiz kapakta vurgu
+  const out = {};
+  { // Koyu: baskın rengin koyu tonu, vurgu canlı rengin açık tonu
+    const bg = hsl(dom.h, Math.min(dom.s, 0.6), 0.13), bg2 = hsl((dom.h + 12) % 360, Math.min(dom.s, 0.6), 0.23);
+    const ink = '#f8f5ee';
+    out['kapak-koyu'] = { bg, bg2, ink, soft: alpha(ink, 0.74), accent: mono ? warm : readable(hsl(vivid.h, Math.max(vivid.s, 0.5), 0.62), [bg, bg2], 3, 1) };
+  }
+  { // Açık: baskın rengin çok açık tonu, yazı aynı rengin koyusu
+    const bg = hsl(dom.h, Math.min(dom.s, 0.45) * 0.6, 0.92), bg2 = hsl((dom.h + 12) % 360, Math.min(dom.s, 0.45) * 0.5, 0.97);
+    const ink = readable(hsl(dom.h, Math.min(dom.s, 0.5), 0.16), [bg, bg2], 7, -1);
+    out['kapak-acik'] = { bg, bg2, ink, soft: alpha(ink, 0.7), accent: mono ? '#9a6a12' : readable(hsl(vivid.h, Math.max(vivid.s, 0.5), 0.4), [bg, bg2], 3, -1) };
+  }
+  { // Canlı: zemin kapağın en canlı rengi; yazı beyaz ya da koyu (hangisi okunaklıysa). Renksiz kapakta siyah zemin.
+    let bg, bg2;
+    if (mono) { bg = '#121212'; bg2 = '#2a2a2a'; }
+    else {
+      bg = hsl(vivid.h, Math.max(vivid.s, 0.45), Math.min(0.46, Math.max(0.3, vivid.l)));
+      bg2 = hsl((vivid.h + 18) % 360, Math.max(vivid.s, 0.45), Math.max(0.2, Math.min(0.46, vivid.l) - 0.12));
+    }
+    const light = '#ffffff', dark = '#14110d';
+    const ink = Math.min(contrast(light, bg), contrast(light, bg2)) >= Math.min(contrast(dark, bg), contrast(dark, bg2)) ? light : dark;
+    // yazı en az 4.5:1 okunsun diye zemin gerekirse koyulaştırılır/açılır
+    bg = readable(bg, [ink], 4.5, ink === light ? -1 : 1); bg2 = readable(bg2, [ink], 4.5, ink === light ? -1 : 1);
+    const acc = mono ? warm : ink === light ? readable(hsl(second.h, 0.6, 0.8), [bg, bg2], 3, 1) : readable(hsl(second.h, 0.6, 0.2), [bg, bg2], 3, -1);
+    out['kapak-canli'] = { bg, bg2, ink, soft: alpha(ink, 0.78), accent: acc };
+  }
+  for (const k of Object.keys(out)) out[k] = { id: k, label: COVER_THEMES.find(t => t.id === k).label, ...out[k] };
+  paletteCache.set(img, out);
+  return out;
+}
+
 /** Kullanılacak renkler: palet ya da özel renk (yazı rengi otomatikse zemine göre açık/koyu seçilir) */
-function colors(o) {
-  const P = THEMES.find(t => t.id === o.theme) || THEMES[0];
+function colors(o, coverPal) {
+  const P = (coverPal && coverPal[o.theme]) || THEMES.find(t => t.id === o.theme) || THEMES[0];
   if (!o.custom?.bg) return P;
   const dark = lum(o.custom.bg) < 0.3;
   const ink = o.custom.ink || (dark ? '#fbf8f1' : '#1d1a16');
@@ -167,7 +245,7 @@ export function normalize(o = {}) {
   const n = { ...DEFAULTS, ...o, show: { ...DEFAULTS.show, ...(o.show || {}) } };
   if (o.cover === false) n.show.cover = false;
   if (o.cover === true) n.show.cover = true;
-  for (const [k, list] of [['format', FORMATS], ['layout', LAYOUTS], ['theme', THEMES], ['bg', BACKGROUNDS], ['align', ALIGNS], ['font', FONTS], ['size', SIZES]])
+  for (const [k, list] of [['format', FORMATS], ['layout', LAYOUTS], ['theme', [...THEMES, ...COVER_THEMES]], ['bg', BACKGROUNDS], ['align', ALIGNS], ['font', FONTS], ['size', SIZES]])
     if (!list.some(i => i.id === n[k])) n[k] = DEFAULTS[k];
   if (n.custom && !/^#[0-9a-f]{6}$/i.test(n.custom.bg || '')) n.custom = null;
   return n;
@@ -180,15 +258,18 @@ export async function drawCard(h, opts = {}) {
   const book = bookById(h.bookId) || {};
   const FONT = FONTS.find(f => f.id === o.font).css, SZ = SIZES.find(s => s.id === o.size).k;
   try { await Promise.all([document.fonts.load(SANS(600, 48)), document.fonts.load(SANS(800, 30))]); } catch { /* sistem yazı tipine düşer */ }
-  const coverWanted = o.show.cover || o.bg === 'kapak' || o.layout === 'kapak';
+  const coverTheme = o.theme.startsWith('kapak-') && !o.custom?.bg;
+  const coverWanted = o.show.cover || o.bg === 'kapak' || o.layout === 'kapak' || coverTheme;
   const coverImg = coverWanted ? await loadCover(book.cover) : null;
+  const coverPal = coverTheme && coverImg ? coverPalettes(coverImg) : null;
   const photo = o.bg === 'foto' ? o.photo || null : null;
   const c = document.createElement('canvas');
   c.width = F.w; c.height = F.h;
   c.dataset.cover = !coverWanted ? 'off' : coverImg ? 'ok' : (book.cover ? 'fail' : 'none');
+  c.dataset.palette = coverTheme ? (coverPal ? 'cover' : 'fallback') : 'preset';
   const x = c.getContext('2d');
   x.textBaseline = 'top';
-  let T = colors(o);
+  let T = colors(o, coverPal);
   const onImage = !!((o.bg === 'kapak' && coverImg) || (o.bg === 'foto' && photo));
   drawBackground(x, F, o, T, o.bg === 'kapak' ? coverImg : photo);
   const U = Math.min(F.w, F.h * 0.8); // ölçü birimi (yatay biçimde taşmasın)
@@ -361,6 +442,7 @@ export function openShareDialog(h) {
     const msgs = [];
     if (cv.dataset.cover === 'fail') msgs.push('Kitabın kapağı karta eklenemiyor: kapak, izin vermeyen bir siteden bağlantı olarak kaydedilmiş. Kitabı düzenleyip kapağı fotoğraf olarak yükleyebilirsin.');
     if (st.bg === 'foto' && !st.photo) msgs.push('Arka plan için “Fotoğraf seç”e dokun.');
+    if (cv.dataset.palette === 'fallback' && cv.dataset.cover !== 'fail') msgs.push('Kapağın renkleri okunamadı; Gece paleti kullanıldı.');
     note.hidden = !msgs.length; note.textContent = msgs.join(' ');
     savePrefs(st);
   };
@@ -375,10 +457,20 @@ export function openShareDialog(h) {
     return wrapEl;
   };
   const row = (label, control) => el('div', { class: 'share-row' }, el('span', { class: 'field-label' }, label), control);
+  let coverRowWrap; // aşağıda (paletler hazır olunca görünür)
 
   // Renk örnekleri + özel renk
   const swatches = el('div', { class: 'share-swatches', role: 'group', 'aria-label': 'Renk' });
+  const coverRow = el('div', { class: 'share-coverpal', role: 'group', 'aria-label': 'Kapakla uyumlu renkler', hidden: true });
+  let coverPal = null;
   const drawSwatches = () => {
+    if (coverPal) coverRow.replaceChildren(...COVER_THEMES.map(ct => {
+      const t = coverPal[ct.id];
+      const b = el('button', { type: 'button', class: 'chip-btn chip-sm share-cp', 'aria-pressed': String(!st.custom && st.theme === ct.id), title: `Kapakla uyumlu: ${ct.label}` }, el('span', { class: 'share-cp-dot', 'aria-hidden': 'true' }), ct.label);
+      const dot = b.firstChild; dot.style.background = `linear-gradient(135deg, ${t.bg} 50%, ${t.bg2} 50%)`; dot.style.setProperty('--dot', t.accent);
+      b.onclick = () => { st.theme = ct.id; st.custom = null; drawSwatches(); render(); };
+      return b;
+    }));
     swatches.replaceChildren(...THEMES.map(t => {
       const b = el('button', { type: 'button', class: 'share-sw', title: t.label, 'aria-label': t.label, 'aria-pressed': String(!st.custom && st.theme === t.id) });
       b.style.background = `linear-gradient(135deg, ${t.bg} 50%, ${t.bg2} 50%)`;
@@ -387,7 +479,14 @@ export function openShareDialog(h) {
       return b;
     }));
   };
+  coverRowWrap = el('div', { class: 'share-row', hidden: true }, el('span', { class: 'field-label' }, 'Kapakla uyumlu'), coverRow);
   drawSwatches();
+  // Kapak yüklenince (izin veren kaynaktansa) kapakla uyumlu paletler hazırlanır
+  if (book.cover) loadCover(book.cover).then(img => {
+    coverPal = img ? coverPalettes(img) : null;
+    if (coverPal) { coverRow.hidden = false; coverRowWrap.hidden = false; drawSwatches(); }
+  });
+  if (st.theme.startsWith('kapak-') && !book.cover) st.theme = 'gece';
   const bgColor = el('input', { type: 'color', value: st.custom?.bg || '#2b4c7e', 'aria-label': 'Özel arka plan rengi' });
   const inkColor = el('input', { type: 'color', value: st.custom?.ink || '#ffffff', 'aria-label': 'Özel yazı rengi' });
   const inkAuto = el('input', { type: 'checkbox', checked: !st.custom?.ink });
@@ -429,6 +528,7 @@ export function openShareDialog(h) {
       row('Düzen', seg(LAYOUTS.filter(l => l.id !== 'kapak' || book.cover), () => st.layout, v => { st.layout = v; })),
       row('Hizalama', seg(ALIGNS, () => st.align, v => { st.align = v; }, { iconsOnly: true }))),
     renk: el('div', { class: 'share-panel', hidden: true },
+      coverRowWrap,
       row('Renk', swatches),
       row('Arka plan', el('div', { class: 'share-inline' }, bgSeg, photoBtn, photoIn)),
       row('Özel renk', custom)),

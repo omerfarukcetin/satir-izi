@@ -779,3 +779,7 @@ select.select-pill { width: auto; min-height: 36px; height: 36px; padding: 0 .7r
 .share-custom .check { margin: 0; font-size: var(--t-body); }
 .share-checks { display: flex; flex-wrap: wrap; gap: .1rem 1rem; }
 .share-checks .check { margin: .2rem 0; font-size: var(--t-body); }
+.share-coverpal { display: flex; flex-wrap: wrap; gap: .4rem; }
+.share-cp { padding-left: .4rem; }
+.share-cp-dot { width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgb(0 0 0 / 15%); position: relative; flex: none; }
+.share-cp-dot::after { content: ""; position: absolute; right: 3px; bottom: 3px; width: 7px; height: 7px; border-radius: 50%; background: var(--dot); }
