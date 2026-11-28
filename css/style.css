@@ -783,3 +783,9 @@ select.select-pill { width: auto; min-height: 36px; height: 36px; padding: 0 .7r
 .share-cp { padding-left: .4rem; }
 .share-cp-dot { width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgb(0 0 0 / 15%); position: relative; flex: none; }
 .share-cp-dot::after { content: ""; position: absolute; right: 3px; bottom: 3px; width: 7px; height: 7px; border-radius: 50%; background: var(--dot); }
+
+/* Ana sayfa üstü: başlıksız, renkli kutusuz */
+.home-top { margin: .2rem 0 .9rem; }
+.home-top .hero-actions .btn { min-height: 48px; }
+.home-top .hero-ask { margin-top: .55rem; padding: .6rem .8rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

@@ -20,8 +20,9 @@ export async function homeView() {
   const total = state.highlights.length + state.notes.length;
 
   // 1) Başlık: yalnızca iki ana eylem ve tek satırlık "sor"
-  const hero = el('div', { class: 'hero hero-slim' },
-    el('h1', {}, 'Okudukların kaybolmasın.'),
+  // Başlık yok: doğrudan iki ana eylem ve tek satırlık "sor" (sayfa başlığı ekran okuyucular için gizli)
+  const hero = el('div', { class: 'home-top' },
+    el('h1', { class: 'sr-only' }, 'Ana sayfa'),
     el('div', { class: 'hero-actions' },
       button('Sayfa tara', { icon: 'camera', variant: 'primary', href: '#/tara' }),
       button('Kitap ekle', { icon: 'plus', onClick: addBook })),

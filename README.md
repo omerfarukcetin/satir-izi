@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v3.9.0)
+## Özellikler (v3.9.1)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -261,6 +261,9 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 3.9.1
+- Ana sayfada “Okudukların kaybolmasın.” başlığı ve renkli kutu kaldırıldı; sayfa doğrudan “Sayfa tara”, “Kitap ekle” ve “Arşivine sor” ile başlıyor.
 
 ### 3.9.0
 - Alıntı kartında **Kapakla uyumlu** renkler: kitabın kapağından cihazda çıkarılan üç palet (Koyu, Açık, Canlı).
