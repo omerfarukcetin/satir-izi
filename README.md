@@ -12,7 +12,7 @@ Canlı adres: https://omerfarukcetin.github.io/satir-izi/
 
 ---
 
-## Özellikler (v3.7.0)
+## Özellikler (v3.8.0)
 
 - **Otomatik doldurma:** “Kapağın fotoğrafını çek” ile ad ve yazar (arka kapak da eklenirse ISBN ve yayınevi) Gemini ile okunur;
   ISBN bulunursa Google Books ve Open Library’den sayfa sayısı, yayınevi ve kapak tamamlanır. ISBN elle de aranabilir.
@@ -261,6 +261,13 @@ cihazdaki veriler ortaktır. Sefer, `../satir-izi/js/bridge.js` modülünü içe
 - Köprünün dışa açtığı işlevler değiştirilirken Sefer’deki çağrılar da güncellenmelidir.
 
 ## Sürüm geçmişi
+
+### 3.8.0
+- Alıntı kartı düzenleyicisi üç sekmede: **Düzen** (biçim: gönderi 4:5, hikâye 9:16, kare, yatay 16:9; düzen: Klasik,
+  Ortalı, Kapak üstte, Sade, Kart; hizalama: sola, ortaya, sağa, iki yana), **Renk ve zemin** (10 renk paleti, özel zemin
+  ve yazı rengi, degrade / düz / desenli / bulanık kitap kapağı / kendi fotoğrafın) ve **Yazı** (Modern, Klasik, İtalik;
+  küçük/orta/büyük; kitap adı, yazar, sayfa, küçük kapak ve imzayı gösterme/gizleme). Seçimler bir sonraki kart için
+  hatırlanır; seçilen fotoğraf yalnızca o pencerede bellekte tutulur, hiçbir yere kaydedilmez ya da gönderilmez.
 
 ### 3.7.0
 - Sade kitap sayfası: künye bilgileri (yayınevi, kategori, tarihler) tek soluk satırda, başlığın yanında düzenle simgesi;
